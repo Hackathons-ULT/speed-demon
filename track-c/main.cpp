@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <immintrin.h>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -118,54 +117,52 @@ std::vector<const char *> scalar_ranges(const char *begin, const char *end,
   cuts.push_back(end);
   return cuts;
 }
-// Every quote toggles parity, including both bytes of an escaped quote pair.
-// Therefore LF at even prefix parity is a logical record terminator.
-__attribute__((target("avx2,popcnt"))) std::vector<const char *>
-vector_ranges(const char *begin, const char *end, size_t workers) {
+// Odd maximal quote runs contain one delimiter; both text columns open after
+// comma and close before comma. An unambiguous run therefore anchors quote
+// state without inspecting the preceding file. Ambiguous inputs use full
+// parity.
+std::vector<const char *> local_ranges(const char *begin, const char *end,
+                                       size_t workers) {
   std::vector<const char *> cuts{begin};
-  bool quoted = false;
-  size_t next = 1;
-  auto p = begin;
-  for (; end - p >= 32; p += 32) {
-    auto bytes = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(p));
-    uint32_t quotes = uint32_t(
-        _mm256_movemask_epi8(_mm256_cmpeq_epi8(bytes, _mm256_set1_epi8('"'))));
-    if (next < workers && begin + (end - begin) * next / workers <= p + 32) {
-      uint32_t prefix = quotes;
-      prefix ^= prefix << 1;
-      prefix ^= prefix << 2;
-      prefix ^= prefix << 4;
-      prefix ^= prefix << 8;
-      prefix ^= prefix << 16;
-      uint32_t lf = uint32_t(_mm256_movemask_epi8(
-          _mm256_cmpeq_epi8(bytes, _mm256_set1_epi8('\n'))));
-      uint32_t outside = lf & ~(prefix ^ (quoted ? UINT32_MAX : 0));
-      while (next < workers) {
-        auto target = begin + (end - begin) * next / workers;
-        if (target > p + 32)
-          break;
-        unsigned first = target > p ? unsigned(target - p - 1) : 0;
-        uint32_t allowed = outside & (UINT32_MAX << first);
-        if (!allowed)
-          break;
-        cuts.push_back(p + __builtin_ctz(allowed) + 1);
-        ++next;
+  for (size_t next = 1; next < workers; ++next) {
+    auto target = begin + (end - begin) * next / workers;
+    if (target <= cuts.back()) {
+      cuts.push_back(cuts.back());
+      continue;
+    }
+    auto p = target;
+    auto limit = p + std::min<size_t>(65536, end - p);
+    bool anchored = false, quoted = false;
+    while (p < limit) {
+      auto run = static_cast<const char *>(memchr(p, '"', size_t(limit - p)));
+      if (!run)
+        break;
+      // The target can lie within a maximal run; include its entire prefix.
+      auto start = run;
+      while (start > begin && start[-1] == '"')
+        --start;
+      p = run;
+      while (p < end && *p == '"')
+        ++p;
+      if ((p - start) % 2 && start > begin && p < end &&
+          (start[-1] == ',') != (*p == ',')) {
+        quoted = start[-1] == ',';
+        anchored = true;
+        break;
       }
     }
-    quoted ^= bool(__builtin_parity(quotes));
-  }
-  for (; p < end; ++p) {
-    if (*p == '"')
-      quoted = !quoted;
-    if (*p == '\n' && !quoted)
-      while (next < workers &&
-             p + 1 >= begin + (end - begin) * next / workers) {
-        cuts.push_back(p + 1);
-        ++next;
+    if (!anchored)
+      return scalar_ranges(begin, end, workers);
+    for (; p < end; ++p) {
+      if (*p == '"')
+        quoted = !quoted;
+      if (*p == '\n' && !quoted) {
+        ++p;
+        break;
       }
+    }
+    cuts.push_back(p);
   }
-  while (cuts.size() < workers)
-    cuts.push_back(end);
   cuts.push_back(end);
   return cuts;
 }
@@ -368,9 +365,7 @@ int main(int argc, char **argv) {
   size_t workers = 6;
   if (auto env = std::getenv("C_WORKERS"))
     workers = std::max(1, std::min(12, std::atoi(env)));
-  auto cuts = __builtin_cpu_supports("avx2") && __builtin_cpu_supports("popcnt")
-                  ? vector_ranges(begin, end, workers)
-                  : scalar_ranges(begin, end, workers);
+  auto cuts = local_ranges(begin, end, workers);
   Names names;
   Membership membership(country_names.size());
   std::vector<std::deque<Names::Node>> arenas(workers);
