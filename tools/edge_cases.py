@@ -4,6 +4,7 @@ from pathlib import Path
 import random
 import subprocess
 import sys
+import unittest
 
 root = Path(__file__).resolve().parent.parent
 official=Path(sys.argv[1] if len(sys.argv)>1 else "../official").resolve()
@@ -39,3 +40,20 @@ for seed in range(20):
     graph=f"{n} {len(edges)}\n"+"".join(f"{u} {v} {w}\n" for u,v,w in edges)
     queries="".join(f"{u} {v}\n" for u in range(n) for v in range(n))
     run("d",f"d-fuzz-{seed}",{"graph.txt":graph.encode(),"queries.txt":queries.encode()},"".join(f"{x}\n" for x in answers).encode())
+
+if (root/"track-b"/"main.cpp").exists():
+    spec=importlib.util.spec_from_file_location("b_tests",official/"tests"/"test_b_index.py")
+    b=importlib.util.module_from_spec(spec);spec.loader.exec_module(b)
+    def candidate_search(docs,queries):
+        data=root/".validation"/"edge-data"/"b-official"
+        data.mkdir(parents=True,exist_ok=True)
+        (data/"docs.txt").write_bytes(docs)
+        (data/"queries.txt").write_bytes(queries)
+        binary=root/"track-b"/("solution.exe" if sys.platform=="win32" else "solution")
+        subprocess.run([str(binary),str(data),str(data/"out")],check=True)
+        return (data/"out"/"results.txt").read_bytes()
+    b.solve=candidate_search
+    suite=unittest.TestSuite([b.WorkedExample("test_reference_matches_worked_example")])
+    suite.addTests(unittest.defaultTestLoader.loadTestsFromTestCase(b.EdgeCases))
+    if not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful():
+        raise SystemExit("Track B official fixtures failed")
