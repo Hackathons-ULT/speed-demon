@@ -36,3 +36,11 @@ The candidate maps the read-only input on Linux, parses numeric fields directly,
 Expanded Linux CI checks tiny seeds 1/7/42, sample seeds 1/7/42, handwritten CSV boundary cases, and 12,500 independently computed shortest-path answers, then runs offline container builds and unprivileged no-network/read-only sandbox checks. These seed variations test generality; they do not reveal the organiser's private holdout seed. Candidate CI: https://github.com/Hackathons-ULT/speed-demon/actions/runs/41308100814.
 
 Official iteration-2 result: `run-cc87d047e3bf`, commit `7491483ff1e0fe3f3d2b84f3e610310207751da6`, T **0.748500 s**, peak **16781312 bytes**, S 201, D 1, **K 7.419147**, machine points **43.517699**. All check/build/correctness/timeout/sandbox gates passed. This improved the measured coefficient, so the change is retained.
+
+## Agent C: exact encoded-payload views and compact interning
+
+The previous parser materialized a decoded `std::string` for every name, then searched a node-based global map. The candidate retains a view of the field payload after removing CSV delimiters and uses a compact growing flat table with full equality checks on hash collisions. Mandatory quote doubling is an injective encoding of the value; quoted/unquoted equivalent values share a payload, and decoded byte lengths are counted separately. See README.md for the equality argument and VALIDATION.md for tests.
+
+The best established code baseline is `run-cc87d047e3bf` above (K 7.419147). A later run of the same C source, `run-51af415ad600` at commit `501bd050342bba076e29b250f560f614230c3e5d`, measured 0.961571 s and K 6.548947. That spread is why local or single-run marginal deltas are not sufficient evidence of a score improvement.
+
+All cached full/sample/tiny reference checks, official CSV fixtures, 6,000 independently generated rows, and a hand-computed 110,001-name table-growth case pass. No official run ID, timing, peak or coefficient for this candidate is claimed yet. Retain only after coordinator Linux CI and genuine Board comparison establish a meaningful measured gain.

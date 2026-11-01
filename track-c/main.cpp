@@ -3,9 +3,10 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <string>
-#include <unordered_map>
+#include <string_view>
 #include <vector>
 #ifndef _WIN32
 #include <fcntl.h>
@@ -62,6 +63,40 @@ struct Country {
   int64_t sum = 0, low = INT64_MAX, high = INT64_MIN;
   std::vector<uint64_t> names;
 };
+// The compact table stores handles into a dense vector, not allocated nodes.
+// Hash collisions always compare the full encoded payload before reusing an ID.
+struct Names {
+  struct Slot {
+    size_t hash = 0;
+    uint32_t id = 0;
+  };
+  std::vector<Slot> slots = std::vector<Slot>(131072);
+  std::vector<std::string_view> values;
+  Names() { values.reserve(100001); }
+  uint32_t intern(std::string_view value) {
+    if (values.size() * 5 >= slots.size() * 4) {
+      auto old = std::move(slots);
+      slots = std::vector<Slot>(old.size() * 2);
+      for (auto entry : old)
+        if (entry.id) {
+          size_t at = entry.hash & (slots.size() - 1);
+          while (slots[at].id)
+            at = (at + 1) & (slots.size() - 1);
+          slots[at] = entry;
+        }
+    }
+    size_t hash = std::hash<std::string_view>{}(value);
+    size_t at = hash & (slots.size() - 1);
+    while (slots[at].id) {
+      if (slots[at].hash == hash && values[slots[at].id - 1] == value)
+        return slots[at].id - 1;
+      at = (at + 1) & (slots.size() - 1);
+    }
+    values.push_back(value);
+    slots[at] = {hash, uint32_t(values.size())};
+    return uint32_t(values.size() - 1);
+  }
+};
 uint64_t number(const char *&p, const char *end) {
   uint64_t value = 0;
   while (p < end && *p >= '0' && *p <= '9')
@@ -70,37 +105,35 @@ uint64_t number(const char *&p, const char *end) {
 }
 // Only text columns call this routine, and both are followed by a comma.
 // Search spans at once; notes need a decoded length, but no stored contents.
-size_t text_field(const char *&p, const char *end, std::string *value) {
+struct Field {
+  std::string_view encoded;
+  size_t length;
+};
+Field text_field(const char *&p, const char *end) {
   size_t length = 0;
-  if (value)
-    value->clear();
   if (*p == '"') {
     ++p;
+    const char *start = p;
     for (;;) {
       auto quote = static_cast<const char *>(memchr(p, '"', size_t(end - p)));
       if (!quote)
         throw std::runtime_error("unterminated quote");
       length += quote - p;
-      if (value)
-        value->append(p, quote - p);
       p = quote + 1;
       if (*p != '"')
-        break;
+        return {std::string_view(start, size_t(quote - start)), length};
       ++p;
       ++length;
-      if (value)
-        *value += '"';
     }
   } else {
     auto comma = static_cast<const char *>(memchr(p, ',', size_t(end - p)));
     if (!comma)
       throw std::runtime_error("missing comma");
     length = comma - p;
-    if (value)
-      value->assign(p, length);
+    auto encoded = std::string_view(p, length);
     p = comma;
+    return {encoded, length};
   }
-  return length;
 }
 std::string money(int64_t value) {
   std::string sign = value < 0 ? "-" : "";
@@ -138,17 +171,15 @@ int main(int argc, char **argv) {
   end = p + records.size;
   while (p < end && *p++ != '\n') {
   }
-  std::unordered_map<std::string, uint32_t> name_ids;
-  name_ids.reserve(100000);
-  std::string name;
+  Names name_ids;
   while (p < end) {
     if (static_cast<unsigned char>(*p) == 0xef)
       p += 3;
     auto id = number(p, end);
     ++p;
-    auto name_bytes = text_field(p, end, &name);
+    auto name = text_field(p, end);
     ++p;
-    auto note_bytes = text_field(p, end, nullptr);
+    auto note = text_field(p, end);
     ++p;
     auto region = number(p, end);
     ++p;
@@ -171,8 +202,9 @@ int main(int argc, char **argv) {
     c.sum += amount;
     c.low = std::min(c.low, amount);
     c.high = std::max(c.high, amount);
-    auto [it, inserted] = name_ids.try_emplace(name, uint32_t(name_ids.size()));
-    uint32_t ni = it->second;
+    // CSV doubles every literal quote, an injective encoding of field values.
+    // Removing only delimiters also makes quoted/unquoted empty values equal.
+    uint32_t ni = name_ids.intern(name.encoded);
     if (c.names.size() <= ni / 64)
       c.names.resize(ni / 64 + 1);
     uint64_t bit = uint64_t(1) << (ni % 64);
@@ -180,8 +212,8 @@ int main(int argc, char **argv) {
       c.names[ni / 64] |= bit;
       ++c.distinct;
     }
-    c.names_bytes += name_bytes;
-    c.notes_bytes += note_bytes;
+    c.names_bytes += name.length;
+    c.notes_bytes += note.length;
   }
   std::filesystem::create_directories(out);
   std::ofstream output(out + "/aggregates.txt", std::ios::binary);
