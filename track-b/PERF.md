@@ -25,3 +25,11 @@ The coordinator downloaded the official full seed-1 inputs and verified their pu
 Local development timings on Windows x86-64, GCC 16.1.0, C++17 -O3 -DNDEBUG -static: full single-worker flat-table version 20.807110 s; four-worker candidate 10.305907 s. A later sample run took 0.289790 s. These are single development runs amid other work, not controlled or official measurements, and no competition points are inferred. Windows also copies input into a private buffer, unlike the Linux mapping path. Peak memory is not yet measured.
 
 Official Linux/container CI and live Board run ID: pending coordinator integration. Record the actual run, time, memory, source size, K and points after all gates pass; no Board ID or score has been fabricated. The organiser's holdout seed remains unknown; varied local seeds and random fixtures test semantics rather than predict that seed.
+
+## Follow-up: bounded SSE2 token spans
+
+The coordinator's genuine first Board baseline is `run-278ebe10c352`: T 1.533255 s, M 228073472 bytes, S 382, K 7.692432, machine points 44.303185; all gates passed. A follow-up replaces per-byte classification/folding on full spans with baseline x86-64 SSE2. It still performs exact token equality, never hashes alone, and uses guarded loads plus scalar tails.
+
+The follow-up passes the same eight official fixture tests, 8,000 random differential queries, tiny seeds 1/42, sample seeds 1/7 and the full published output hash. An additional 1,634 queries over 564 documents exercise token lengths 1 through 33, sixteen-byte alignments, repeated tokens, digits, UTF-8 separators and nonmatching overlength prefixes. Sample-7 hash is `7f41992e4446b5b88cf7a46ca6bae971f5bafb7984208164c3be3d6dda5c4139`; tiny-42 hash is `ed3989207068087274a213c952af0c8a11dc782886e772874db633c3b1b73934`.
+
+Alternating full Windows development runs were 2.388/2.252 s for the scalar version and 2.012/2.037 s for SSE2. These are local observations only; the follow-up's actual Board K and memory are pending. Six/eight-worker timing experiments and sparse-set search experiments were inconclusive, so they were not added to this candidate.

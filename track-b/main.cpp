@@ -4,6 +4,7 @@
 #include <charconv>
 #include <cstdint>
 #include <cstring>
+#include <emmintrin.h>
 #include <filesystem>
 #include <fstream>
 #include <queue>
@@ -264,12 +265,41 @@ int main(int argc, char **argv) {
             }
             char token[32];
             size_t length = 0;
-            do {
-              if (length < sizeof(token))
-                token[length] = char(lower(static_cast<unsigned char>(*p)));
-              ++length;
-              ++p;
-            } while (p < end && word(static_cast<unsigned char>(*p)));
+
+            for (;;) {
+              if (size_t(end - p) >= 16) {
+                auto bytes =
+                    _mm_loadu_si128(reinterpret_cast<const __m128i *>(p));
+                auto folded = _mm_or_si128(bytes, _mm_set1_epi8(32));
+                auto letters = _mm_and_si128(
+                    _mm_cmpgt_epi8(folded, _mm_set1_epi8('a' - 1)),
+                    _mm_cmpgt_epi8(_mm_set1_epi8('z' + 1), folded));
+                auto digits = _mm_and_si128(
+                    _mm_cmpgt_epi8(bytes, _mm_set1_epi8('0' - 1)),
+                    _mm_cmpgt_epi8(_mm_set1_epi8('9' + 1), bytes));
+                unsigned mask =
+                    unsigned(_mm_movemask_epi8(_mm_or_si128(letters, digits)));
+                unsigned span = mask == 65535
+                                    ? 16
+                                    : unsigned(__builtin_ctz((~mask) & 65535));
+                if (length + 16 <= sizeof(token))
+                  _mm_storeu_si128(reinterpret_cast<__m128i *>(token + length),
+                                   folded);
+                length += span;
+                p += span;
+                if (span < 16)
+                  break;
+              } else {
+                while (p < end && word(static_cast<unsigned char>(*p))) {
+                  if (length < sizeof(token))
+                    token[length] = char(lower(static_cast<unsigned char>(*p)));
+                  ++length;
+                  ++p;
+                }
+                break;
+              }
+            }
+
             uint32_t id = 0;
             if (length <= sizeof(token)) {
               std::string_view value(token, length);
