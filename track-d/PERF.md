@@ -71,3 +71,14 @@ Only the expansion scheduling heuristic changes: expand the side with fewer queu
 Full seed-1 instrumentation found **14,313,226** expansions with distance balancing, including four queries that each expanded **1,740,378** vertices. Size balancing reduced the total to **7,123,603** and eliminated those outliers. A separate unreachable-island case with a large-weight spur fell from **10,002** expansions to **3**, retaining the exact `-1` answer. This demonstrates the mechanism independently of wall-clock noise.
 
 Local full-data development runs with the same BFS layout measured **3.210 s** for one worker, **2.435 s** for two, and **2.065 s** for four, all with the published expected hash. These are not official scores, and the worker/memory trade-off still needs a Board measurement. All cached tiny/sample datasets and the independent random-query oracle remain correctness gates. Official measurement of size balancing: pending.
+
+## Verified four-agent Board receipts
+
+These exact practice Board receipts resolve the pending measurements above. All check, build, correctness, timeout and sandbox gates passed.
+
+| Commit | Run ID | Time (s) | Peak bytes | Source | K | Machine points |
+|---|---|---:|---:|---:|---:|---:|
+| `3733f64` | `run-a64a08dc2338` | 1.050023 | 276590592 | 229 | 8.184373 | 45.649271 |
+| `ee4c7f9` | `run-6263ce34bb35` | 0.842696 | 273137664 | 229 | 9.158841 | 48.092026 |
+
+The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.

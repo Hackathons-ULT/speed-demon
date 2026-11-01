@@ -33,3 +33,14 @@ The coordinator's genuine first Board baseline is `run-278ebe10c352`: T 1.533255
 The follow-up passes the same eight official fixture tests, 8,000 random differential queries, tiny seeds 1/42, sample seeds 1/7 and the full published output hash. An additional 1,634 queries over 564 documents exercise token lengths 1 through 33, sixteen-byte alignments, repeated tokens, digits, UTF-8 separators and nonmatching overlength prefixes. Sample-7 hash is `7f41992e4446b5b88cf7a46ca6bae971f5bafb7984208164c3be3d6dda5c4139`; tiny-42 hash is `ed3989207068087274a213c952af0c8a11dc782886e772874db633c3b1b73934`.
 
 Alternating full Windows development runs were 2.388/2.252 s for the scalar version and 2.012/2.037 s for SSE2. These are local observations only; the follow-up's actual Board K and memory are pending. Six/eight-worker timing experiments and sparse-set search experiments were inconclusive, so they were not added to this candidate.
+
+## Verified four-agent Board receipts
+
+These exact practice Board receipts resolve the pending measurements above. All check, build, correctness, timeout and sandbox gates passed.
+
+| Commit | Run ID | Time (s) | Peak bytes | Source | K | Machine points |
+|---|---|---:|---:|---:|---:|---:|
+| `3733f64` | `run-278ebe10c352` | 1.533255 | 228073472 | 382 | 7.692432 | 44.303185 |
+| `ee4c7f9` | `run-13409d072f12` | 1.363277 | 229441536 | 410 | 8.062158 | 45.322565 |
+
+The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.

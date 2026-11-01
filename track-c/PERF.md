@@ -54,3 +54,14 @@ The region table now uses direct three-letter code indexing and 16-bit country I
 Full/public and multi-seed reference outputs, scalar/vector partition equivalence, quoted CR/LF/BOM cases, 110,001-name growth, thread-count independence, and hot-key contention tests pass. The same Windows binary measured 2.6918 s with one worker and 0.6047 s with six workers on full seed 1; this is a development throughput observation, not an official score. Default six workers avoids relying on a larger local CPU. More source and synchronization overhead are priced trade-offs.
 
 Official Board result for the parallel candidate: pending. No run ID, peak memory or K has been fabricated; coordinator Linux CI and genuine Board measurement are required before retention.
+
+## Verified four-agent Board receipts
+
+These exact practice Board receipts resolve the pending measurements above. All check, build, correctness, timeout and sandbox gates passed.
+
+| Commit | Run ID | Time (s) | Peak bytes | Source | K | Machine points |
+|---|---|---:|---:|---:|---:|---:|
+| `3733f64` | `run-b20919700fe6` | 0.738735 | 16601088 | 229 | 7.339179 | 43.282375 |
+| `ee4c7f9` | `run-25fcd477d5c1` | 0.163784 | 13664256 | 402 | 14.893873 | 58.650382 |
+
+The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.

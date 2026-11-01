@@ -51,7 +51,7 @@ Official Board result for the four-shard candidate: **pending**. Do not replace 
 
 ## Track A agent: contiguous parse, flat latency storage, parallel output
 
-The four-shard candidate subsequently passed the genuine Board: T **0.249200 s**, peak **36,372,480 bytes**, S **200**, K **13.524502**, machine points **56.556065**. The full official run ID is pending the coordinator's retained receipt; it is deliberately not invented here.
+The four-shard candidate subsequently passed the genuine Board: T **0.249200 s**, peak **36,372,480 bytes**, S **200**, K **13.524502**, machine points **56.556065**. The official run ID is `run-c3f2089a89a2` at commit `3733f64dcbb74ead8e38c4034a51b5fee6adc4a6`.
 
 The next experiment replaces repeated whole-file endpoint scans with six contiguous line-aligned parser ranges and immutable concurrently interned keys. Atomic counts plus prefix sums and atomic scatter cursors create one flat latency array without per-group vector growth. Progressive exact ranks are selected in parallel. Six formatters create consecutive hour ranges in private strings, which the main thread writes in order. README.md gives the publication, cursor-ownership and join invariants.
 
@@ -70,3 +70,14 @@ This exact variant passed all cached full/sample/tiny oracle comparisons and fre
 Three alternating local Windows full-data runs each gave base501 median **1.426016 s** and two-pass median **0.543406 s**. Its diagnostic phase profile was load0.174s / count0.082s / prefix0.0015s / parse-and-scatter0.071s / rank0.011s / parallel format-and-write0.015s. Packed records plus parallel output had essentially the same local median (**0.542404 s**) in a separate run, but retain roughly25MB of temporary records and may retain allocator pages; the two-pass variant avoids that allocation. Metadata, latencies and formatting suggest roughly30–35MB auxiliary peak for the two-pass version, an analytical estimate rather than an observed Board memory value.
 
 Official Board result for the two-pass throughput variant: **pending**. The coordinator should compare real time, peak, source and K with the verified four-shard baseline before keeping it. No official score is claimed from these local measurements.
+
+## Verified four-agent Board receipts
+
+These exact practice Board receipts resolve the pending measurements above. All check, build, correctness, timeout and sandbox gates passed.
+
+| Commit | Run ID | Time (s) | Peak bytes | Source | K | Machine points |
+|---|---|---:|---:|---:|---:|---:|
+| `3733f64` | `run-c3f2089a89a2` | 0.249200 | 36372480 | 200 | 13.524502 | 56.556065 |
+| `ee4c7f9` | `run-857a5cabbd8f` | 0.100145 | 42950656 | 254 | 19.909976 | 64.953537 |
+
+The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.

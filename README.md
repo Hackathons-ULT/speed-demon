@@ -6,31 +6,32 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 | Track | Inputs | Output | Approach |
 |---|---|---|---|
-| A Ingest | `requests.log` | `summary.txt` | Map input read-only, intern endpoint views, use the specified 72 UTC-hour buckets, sort 32-bit latencies, select exact nearest ranks, and write bounded integer-formatted output. |
+| A Ingest | `requests.log` | `summary.txt` | Map input read-only, intern endpoint views, use the specified 72 UTC-hour buckets, count and scatter 32-bit latencies with six line-aligned workers, select exact nearest ranks, and write bounded integer-formatted output. |
 | B Index | `docs.txt`, `queries.txt` | `results.txt` | Read queries first; tokenize ASCII bytes once per corpus range, build only needed BOOL postings, and match all phrases with a shared token-level Aho-Corasick automaton. Apply exact left-associative set operations and emit count, ID sum and ten smallest IDs. |
-| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A read-only mapping and quote-aware span parser handle embedded newlines and BOMs. Direct numeric region lookup feeds exact integer-cent aggregates; globally interned names use country bitmaps. |
-| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with radix queues, private epoch labels and up to four query workers. Preserve parallel edges, zero weights and query order. |
+| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A quote-parity scan creates safe ranges for six CSV parsers. Direct region lookup, exact shared name interning and atomic country bitmaps feed private integer-cent aggregates. |
+| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build BFS-reordered forward/reverse CSR arrays and run bidirectional Dijkstra with radix queues, heap-count balancing, private epoch labels and four query workers. Preserve parallel edges, zero weights and query order. |
 
 ## Verified live Board results
 
-The official Board scored all three active tracks at commit `501bd050342bba076e29b250f560f614230c3e5d` on November 1. All correctness, build, timeout, and sandbox gates passed. Expanded Linux CI, including sample seeds 1/7/42 and offline sandbox execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41309598714).
+The official Board scored all four tracks at commit `ee4c7f93fecc931685df611fc7bff97e3aadfd6d` on November 1. All correctness, build, timeout and sandbox gates passed. Expanded Linux validation, multi-seed comparisons, concurrency stress and offline container execution also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697).
 
 | Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
 |---|---|---:|---:|---:|---:|
-| A | `run-6e7dcf2a13d6` | 0.481109 | 35.41 | 10.177465 | 50.381980 |
-| C | `run-51af415ad600` | 0.961571 | 16.74 | 6.548947 | 40.808574 |
-| D | `run-b601407e09bb` | 1.517466 | 276.45 | 6.980301 | 42.193707 |
+| A | `run-857a5cabbd8f` | 0.100145 | 42.95 | 19.909976 | 64.953537 |
+| B | `run-13409d072f12` | 1.363277 | 229.44 | 8.062158 | 45.322565 |
+| C | `run-25fcd477d5c1` | 0.163784 | 13.66 | 14.893873 | 58.650382 |
+| D | `run-6263ce34bb35` | 0.842696 | 273.14 | 9.158841 | 48.092026 |
 
-A improved from 0.952371 s / K 7.402849 to 0.481109 s / K 10.177465. D improved from 3.003655 s / K 5.593737 to 1.517466 s / K 6.980301, with a measured memory cost for its four workers. C is unchanged from its verified best 0.748500 s / K 7.419147 run; its latest single practice run varied to 0.961571 s. Keep the single-run noise separate from actual code changes.
+Compared with the first four-agent batch (`3733f64`), A improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.909976, and C from 0.738735 s / K 7.339179 to 0.163784 s / K 14.893873. The best-three geometric mean machine points increased from 48.541813 to 56.795715. B and D also recorded higher K; smaller practice deltas may include single-run noise.
 
-Run history and baseline comparisons remain in PERF.md and `board-results-history.json`. These are practice machine scores; holdout data and human judging determine final results. Three scored tracks meet the overall track-count requirement. Track B is now implemented and matches its published full seed-1 hash. The new four-agent batch passed Linux correctness and offline sandbox checks; its official Board comparison is pending, so the table above remains the measured baseline. Candidate CI: https://github.com/Hackathons-ULT/speed-demon/actions/runs/41311448384.
+Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. These are practice machine scores; holdout data and human judging determine final results. All four published full seed-1 hashes match. Active optimization is now focused on A; unmerged B/D experiments remain isolated.
 
 ## Build and validate
 
 ```sh
 g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-a/main.cpp -o track-a/solution
 g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-b/main.cpp -o track-b/solution
-g++ -std=c++17 -O3 -DNDEBUG -static track-c/main.cpp -o track-c/solution
+g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-c/main.cpp -o track-c/solution
 g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-d/main.cpp -o track-d/solution
 git clone https://github.com/hackathon-raptors/speed-demon-2026 ../official
 python3 tools/edge_cases.py ../official
