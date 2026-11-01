@@ -12,17 +12,17 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 ## Verified live Board results
 
-The official Board scored all three active tracks at commit `7491483ff1e0fe3f3d2b84f3e610310207751da6` on November 1. All correctness, build, timeout, and sandbox gates passed. Expanded Linux CI, including sample seeds 1/7/42 and offline sandbox execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41308375224).
+The official Board scored all three active tracks at commit `501bd050342bba076e29b250f560f614230c3e5d` on November 1. All correctness, build, timeout, and sandbox gates passed. Expanded Linux CI, including sample seeds 1/7/42 and offline sandbox execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41309598714).
 
 | Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
 |---|---|---:|---:|---:|---:|
-| A | `run-19c6d1657d8d` | 0.952371 | 65.61 | 7.402849 | 43.469944 |
-| C | `run-cc87d047e3bf` | 0.748500 | 16.78 | 7.419147 | 43.517699 |
-| D | `run-9433ca9e282a` | 3.003655 | 161.88 | 5.593737 | 37.385101 |
+| A | `run-6e7dcf2a13d6` | 0.481109 | 35.41 | 10.177465 | 50.381980 |
+| C | `run-51af415ad600` | 0.961571 | 16.74 | 6.548947 | 40.808574 |
+| D | `run-b601407e09bb` | 1.517466 | 276.45 | 6.980301 | 42.193707 |
 
-C improved from 2.991594 s / K 3.479511 to 0.748500 s / K 7.419147. D improved from 5.857109 s / K 4.121718 to 3.003655 s / K 5.593737. The baseline and measured changes remain in each PERF.md and `board-results-history.json`. These are live practice machine scores; holdout data and human judging determine final results. Three scored tracks meet the overall track-count requirement. Track B remains unchanged.
+A improved from 0.952371 s / K 7.402849 to 0.481109 s / K 10.177465. D improved from 3.003655 s / K 5.593737 to 1.517466 s / K 6.980301, with a measured memory cost for its four workers. C is unchanged from its verified best 0.748500 s / K 7.419147 run; its latest single practice run varied to 0.961571 s. Keep the single-run noise separate from actual code changes.
 
-The A/D iteration-3 candidate changes memory layout and query concurrency; the table above is the last measured baseline until its new Board run completes. See PERF.md for the experiment and trade-offs.
+Run history and baseline comparisons remain in PERF.md and `board-results-history.json`. These are practice machine scores; holdout data and human judging determine final results. Three scored tracks meet the overall track-count requirement. Track B remains unchanged pending its agent implementation.
 
 ## Build and validate
 

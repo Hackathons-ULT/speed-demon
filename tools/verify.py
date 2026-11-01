@@ -15,12 +15,15 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--official",type=Path,default=Path("../official"))
 parser.add_argument("--scale",choices=["tiny","sample","full"],default="tiny")
 parser.add_argument("--seeds",type=int,nargs="+",default=[1,7,42])
+parser.add_argument("--tracks",choices=list("abcd"),nargs="+",help="Defaults to tracks with a C++ main.cpp")
 args=parser.parse_args()
 root=Path(__file__).resolve().parent.parent
 official=args.official.resolve()
 rows=[]
-tracks={"a":("a_ingest","summary.txt"),"c":("c_join","aggregates.txt"),"d":("d_traverse","distances.txt")}
-for track,(module,filename) in tracks.items():
+tracks={"a":("a_ingest","summary.txt"),"b":("b_index","results.txt"),"c":("c_join","aggregates.txt"),"d":("d_traverse","distances.txt")}
+selected=args.tracks or [t for t in tracks if (root/f"track-{t}"/"main.cpp").exists()]
+for track in selected:
+    module,filename=tracks[track]
     for seed in args.seeds:
         data=root/".validation"/f"{track}-{args.scale}-{seed}"
         ref,actual=data/"reference",data/"actual"

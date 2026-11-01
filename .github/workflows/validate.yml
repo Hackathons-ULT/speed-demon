@@ -18,7 +18,8 @@ jobs:
           git -C ../official checkout 158894dcefde61f459c0adfae841900458dbeb7f
       - name: Build C++17 solutions
         run: |
-          for track in a c d; do
+          for track in a b c d; do
+            if [ ! -f "track-$track/main.cpp" ]; then continue; fi
             g++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -static -pthread track-$track/main.cpp -o track-$track/solution
             python3 ../official/harness/dockerfile_check.py track-$track/Dockerfile ../official/harness/allowlist.json
           done
@@ -32,7 +33,8 @@ jobs:
         run: |
           docker pull gcc:15@sha256:eb5e64286ad47187b32bda75c6b6916166ecb41da56559b8b09e0001748d2cce
           docker pull debian:13-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
-          for track in a c d; do
-            expected=$(python3 -c "import hashlib; name={'a':'summary.txt','c':'aggregates.txt','d':'distances.txt'}['$track']; print(hashlib.sha256(open('.validation/$track-sample-1/reference/'+name,'rb').read()).hexdigest())")
+          for track in a b c d; do
+            if [ ! -f "track-$track/main.cpp" ]; then continue; fi
+            expected=$(python3 -c "import hashlib; name={'a':'summary.txt','b':'results.txt','c':'aggregates.txt','d':'distances.txt'}['$track']; print(hashlib.sha256(open('.validation/$track-sample-1/reference/'+name,'rb').read()).hexdigest())")
             python3 check.py $track --data .validation/$track-sample-1 --expected "$expected"
           done

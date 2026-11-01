@@ -1,5 +1,5 @@
 {
-  "status": "Three active C++ tracks passed official live Board gates",
+  "status": "Latest measured A/C/D all pass official Board gates",
   "official_commit": "158894dcefde61f459c0adfae841900458dbeb7f",
   "compiler": "GCC 16.1.0 MinGW-w64, C++17 -O3 -DNDEBUG -static",
   "platform": "Windows x86-64",
@@ -157,11 +157,11 @@
   "docker_allowlist": "passed for all three Dockerfiles",
   "docker_runtime": "Linux CI offline builds and unprivileged read-only/no-network sandbox checks passed",
   "board_run_ids": [
-    "run-d530eae56018",
-    "run-b5d77a1cbee5",
-    "run-632362c7b696"
+    "run-6e7dcf2a13d6",
+    "run-51af415ad600",
+    "run-b601407e09bb"
   ],
-  "submission_status": "Uploaded to team speed-demon branch; A/C/D scored. B remains unchanged reference.",
+  "submission_status": "501bd05 measured on speed-demon; four isolated agents preparing additional candidates",
   "existing_board_run": {
     "track": "a",
     "run_id": "run-cd538794e60c",
@@ -171,6 +171,7 @@
     "K": 2.347976,
     "points": 18.534678
   },
-  "ci_url": "https://github.com/Hackathons-ULT/speed-demon/actions/runs/41306885340",
-  "board_results_file": "board-results.json"
+  "ci_url": "https://github.com/Hackathons-ULT/speed-demon/actions/runs/41309598714",
+  "board_results_file": "board-results.json",
+  "latest_measured_commit": "501bd050342bba076e29b250f560f614230c3e5d"
 }
