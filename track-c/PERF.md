@@ -44,3 +44,13 @@ The previous parser materialized a decoded `std::string` for every name, then se
 The best established code baseline is `run-cc87d047e3bf` above (K 7.419147). A later run of the same C source, `run-51af415ad600` at commit `501bd050342bba076e29b250f560f614230c3e5d`, measured 0.961571 s and K 6.548947. That spread is why local or single-run marginal deltas are not sufficient evidence of a score improvement.
 
 All cached full/sample/tiny reference checks, official CSV fixtures, 6,000 independently generated rows, and a hand-computed 110,001-name table-growth case pass. No official run ID, timing, peak or coefficient for this candidate is claimed yet. Retain only after coordinator Linux CI and genuine Board comparison establish a meaningful measured gain.
+
+## Agent C: record-parallel parsing and exact shared membership
+
+The follow-on to `07aa1e8` targets a larger throughput gain. An AVX2/scalar quote-parity scan finds record-safe partitions. Six independent parsers share an exact concurrent chained name interner and atomic country/name membership bits, while retaining private numeric aggregates. A first atomic bit-set identifies one winner per distinct pair, so private distinct counters sum to the exact union without a large set-merging pass. Release/acquire publication protects immutable names and initialized bitmap blocks; worker joins precede aggregation/output. See README.md for the invariants.
+
+The region table now uses direct three-letter code indexing and 16-bit country IDs. This is valid for every possible `[A-Z]{3}` code, not a seed catalogue. Hash collisions still compare full encoded payloads; quoted/unquoted equality and decoded byte counts are unchanged.
+
+Full/public and multi-seed reference outputs, scalar/vector partition equivalence, quoted CR/LF/BOM cases, 110,001-name growth, thread-count independence, and hot-key contention tests pass. The same Windows binary measured 2.6918 s with one worker and 0.6047 s with six workers on full seed 1; this is a development throughput observation, not an official score. Default six workers avoids relying on a larger local CPU. More source and synchronization overhead are priced trade-offs.
+
+Official Board result for the parallel candidate: pending. No run ID, peak memory or K has been fabricated; coordinator Linux CI and genuine Board measurement are required before retention.
