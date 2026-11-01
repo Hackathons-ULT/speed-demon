@@ -25,3 +25,14 @@ Official Board result for the C++ step, commit `738832835b87dd40b567dac9cfd6ac4d
 The official run passed check, build, correctness, timeout and sandbox gates on the full public seed-1 dataset. This is the live practice Board, not the final holdout score. See `board-results.json` for the recorded receipt. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
 
 The earlier scored Python implementation is preserved under `experiments/track-a-python/`; its existing performance log above is unchanged. The compact candidate avoids the per-process parsing/ranking machinery and stores only one 32-bit latency per request. Whether it improves the coefficient must be established on the same Board hardware.
+
+
+## Iteration 3: memory layout and throughput experiment
+
+Genuine baseline: `run-19c6d1657d8d` at `7491483ff1e0fe3f3d2b84f3e610310207751da6`, T 0.952371 s, peak 65605632 bytes, K 7.402849, machine points 43.469944; all gates passed.
+
+The candidate maps input read-only on Linux, interns endpoint views once, and uses 72 direct hour buckets per endpoint instead of constructing an hour/endpoint string key per record. The fixed time span is an explicit specification guarantee shared by every seed, not an input fingerprint. Timestamp prefixes are retained for exact output. A bounded stack buffer plus locale-independent integer conversion reduces output formatting overhead. Full sorting and exact nearest ranks remain.
+
+Handwritten edge fixtures and all 12,500 independently computed random shortest-path answers pass, including parallel, zero-weight, unreachable and over-uint32 paths. Existing seed-1 full data and multiple tiny/sample seeds remain correctness gates. Expanded Linux CI will additionally exercise the POSIX mapping path and offline container sandbox.
+
+Official Board result for iteration 3: pending. No timing, memory, coefficient or run ID for this new candidate is claimed yet.

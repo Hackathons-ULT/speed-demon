@@ -35,4 +35,4 @@ The candidate maps the read-only input on Linux, parses numeric fields directly,
 
 Expanded Linux CI checks tiny seeds 1/7/42, sample seeds 1/7/42, handwritten CSV boundary cases, and 12,500 independently computed shortest-path answers, then runs offline container builds and unprivileged no-network/read-only sandbox checks. These seed variations test generality; they do not reveal the organiser's private holdout seed. Candidate CI: https://github.com/Hackathons-ULT/speed-demon/actions/runs/41308100814.
 
-Official Board result for iteration 2: pending. Keep or revise this candidate based on genuine measured K after all gates pass.
+Official iteration-2 result: `run-cc87d047e3bf`, commit `7491483ff1e0fe3f3d2b84f3e610310207751da6`, T **0.748500 s**, peak **16781312 bytes**, S 201, D 1, **K 7.419147**, machine points **43.517699**. All check/build/correctness/timeout/sandbox gates passed. This improved the measured coefficient, so the change is retained.

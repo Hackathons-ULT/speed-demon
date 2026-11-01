@@ -6,28 +6,30 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 | Track | Inputs | Output | Approach |
 |---|---|---|---|
-| A Ingest | `requests.log` | `summary.txt` | Copy the fixed-width UTC hour, hash `(hour, endpoint)` groups, sort 32-bit latencies, select exact nearest ranks, and emit sorted groups. |
+| A Ingest | `requests.log` | `summary.txt` | Map input read-only, intern endpoint views, use the specified 72 UTC-hour buckets, sort 32-bit latencies, select exact nearest ranks, and write bounded integer-formatted output. |
 | C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A read-only mapping and quote-aware span parser handle embedded newlines and BOMs. Direct numeric region lookup feeds exact integer-cent aggregates; globally interned names use country bitmaps. |
-| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with 64-bit radix queues and epoch stamps. Preserve parallel edges, zero weights, and query order. |
+| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with radix queues, private epoch labels and up to four query workers. Preserve parallel edges, zero weights and query order. |
 
 ## Verified live Board results
 
-The official Board scored all three active tracks at commit `738832835b87dd40b567dac9cfd6ac4db2e9aa06` on November 1. All correctness, build, timeout, and sandbox gates passed. Linux CI, including offline container execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41306885340).
+The official Board scored all three active tracks at commit `7491483ff1e0fe3f3d2b84f3e610310207751da6` on November 1. All correctness, build, timeout, and sandbox gates passed. Expanded Linux CI, including sample seeds 1/7/42 and offline sandbox execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41308375224).
 
 | Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
 |---|---|---:|---:|---:|---:|
-| A | `run-d530eae56018` | 1.007284 | 65.63 | 7.197606 | 42.859403 |
-| C | `run-b5d77a1cbee5` | 2.974006 | 28.79 | 3.491075 | 27.147959 |
-| D | `run-632362c7b696` | 5.841748 | 162.00 | 4.127217 | 30.782867 |
+| A | `run-19c6d1657d8d` | 0.952371 | 65.61 | 7.402849 | 43.469944 |
+| C | `run-cc87d047e3bf` | 0.748500 | 16.78 | 7.419147 | 43.517699 |
+| D | `run-9433ca9e282a` | 3.003655 | 161.88 | 5.593737 | 37.385101 |
 
-These are practice Board machine scores; the final holdout dataset and human judging determine final results. The three scored tracks meet the track-count requirement for the overall title. Track B remains unchanged. `board-results.json` retains the actual measurements and gate results.
+C improved from 2.991594 s / K 3.479511 to 0.748500 s / K 7.419147. D improved from 5.857109 s / K 4.121718 to 3.003655 s / K 5.593737. The baseline and measured changes remain in each PERF.md and `board-results-history.json`. These are live practice machine scores; holdout data and human judging determine final results. Three scored tracks meet the overall track-count requirement. Track B remains unchanged.
+
+The A/D iteration-3 candidate changes memory layout and query concurrency; the table above is the last measured baseline until its new Board run completes. See PERF.md for the experiment and trade-offs.
 
 ## Build and validate
 
 ```sh
 g++ -std=c++17 -O3 -DNDEBUG -static track-a/main.cpp -o track-a/solution
 g++ -std=c++17 -O3 -DNDEBUG -static track-c/main.cpp -o track-c/solution
-g++ -std=c++17 -O3 -DNDEBUG -static track-d/main.cpp -o track-d/solution
+g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-d/main.cpp -o track-d/solution
 git clone https://github.com/hackathon-raptors/speed-demon-2026 ../official
 python3 tools/edge_cases.py ../official
 python3 tools/verify.py --official ../official --scale sample --seeds 1 7

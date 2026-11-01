@@ -19,7 +19,7 @@ jobs:
       - name: Build C++17 solutions
         run: |
           for track in a c d; do
-            g++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -static track-$track/main.cpp -o track-$track/solution
+            g++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -static -pthread track-$track/main.cpp -o track-$track/solution
             python3 ../official/harness/dockerfile_check.py track-$track/Dockerfile ../official/harness/allowlist.json
           done
       - name: Verify fixtures, random graphs, and multiple generator seeds

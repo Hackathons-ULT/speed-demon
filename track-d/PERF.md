@@ -35,4 +35,15 @@ The candidate replaces each binary priority queue with a monotone 64-bit radix h
 
 Expanded Linux CI checks tiny seeds 1/7/42, sample seeds 1/7/42, handwritten CSV boundary cases, and 12,500 independently computed shortest-path answers, then runs offline container builds and unprivileged no-network/read-only sandbox checks. These seed variations test generality; they do not reveal the organiser's private holdout seed. Candidate CI: https://github.com/Hackathons-ULT/speed-demon/actions/runs/41308100814.
 
-Official Board result for iteration 2: pending. Keep or revise this candidate based on genuine measured K after all gates pass.
+Official iteration-2 result: `run-9433ca9e282a`, commit `7491483ff1e0fe3f3d2b84f3e610310207751da6`, T **3.003655 s**, peak **161878016 bytes**, S 178, D 1, **K 5.593737**, machine points **37.385101**. All check/build/correctness/timeout/sandbox gates passed. This improved the measured coefficient, so the change is retained.
+
+
+## Iteration 3: memory layout and throughput experiment
+
+Genuine baseline: `run-9433ca9e282a` at `7491483ff1e0fe3f3d2b84f3e610310207751da6`, T 3.003655 s, peak 161878016 bytes, K 5.593737, machine points 37.385101; all gates passed.
+
+The candidate keeps the measured radix-heap search and runs at most four independent queries in parallel. Adjacency arrays are immutable, every worker has private labels/epochs/heaps, an atomic index gives each answer slot one writer, and all workers join before ordered output. Extra label memory is a priced trade-off. The Board's K, rather than local throughput alone, decides whether this version is retained. Local full-data output matches the reference; a development run dropped from about 9.8 s to 6.7 s, which is not an official measurement.
+
+Handwritten edge fixtures and all 12,500 independently computed random shortest-path answers pass, including parallel, zero-weight, unreachable and over-uint32 paths. Existing seed-1 full data and multiple tiny/sample seeds remain correctness gates. Expanded Linux CI will additionally exercise the POSIX mapping path and offline container sandbox.
+
+Official Board result for iteration 3: pending. No timing, memory, coefficient or run ID for this new candidate is claimed yet.

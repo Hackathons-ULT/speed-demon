@@ -1,12 +1,12 @@
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
-#include <functional>
-#include <queue>
 #include <string>
+#include <thread>
 #include <vector>
 struct Reader {
   FILE *file;
@@ -112,63 +112,79 @@ int main(int argc, char **argv) {
   }
   raw.clear();
   raw.shrink_to_fit();
-  // Epochs avoid clearing the entire distance arrays between short queries.
-  std::vector<uint64_t> distance[2];
-  std::vector<uint32_t> seen[2];
-  for (int s = 0; s < 2; ++s) {
-    distance[s].resize(n);
-    seen[s].resize(n);
-  }
+
   Reader queries(data + "/queries.txt");
-  uint32_t source, target, epoch = 0;
-  std::filesystem::create_directories(out);
-  std::ofstream output(out + "/distances.txt", std::ios::binary);
-  while (queries.next(source) && queries.next(target)) {
-    if (source == target) {
-      output << "0\n";
-      continue;
+  std::vector<std::pair<uint32_t, uint32_t>> pairs;
+  uint32_t source, target;
+  while (queries.next(source) && queries.next(target))
+    pairs.push_back({source, target});
+  std::vector<int64_t> answers(pairs.size());
+  std::atomic<size_t> next{0};
+  auto worker = [&] {
+    // Every worker owns its labels and epochs; adjacency is immutable.
+    std::vector<uint64_t> distance[2];
+    std::vector<uint32_t> seen[2];
+    for (int s = 0; s < 2; ++s) {
+      distance[s].resize(n);
+      seen[s].resize(n);
     }
-    ++epoch;
-    Heap heap[2];
-    distance[0][source] = 0;
-    seen[0][source] = epoch;
-    heap[0].push({0, source});
-    distance[1][target] = 0;
-    seen[1][target] = epoch;
-    heap[1].push({0, target});
-    uint64_t best = UINT64_MAX;
+    uint32_t epoch = 0;
     for (;;) {
-      for (int s = 0; s < 2; ++s)
-        while (!heap[s].empty() &&
-               heap[s].top().first != distance[s][heap[s].top().second])
-          heap[s].pop();
-      if (heap[0].empty() || heap[1].empty())
+      size_t qi = next.fetch_add(1, std::memory_order_relaxed);
+      if (qi >= pairs.size())
         break;
-      // No unsettled path can improve a bound below both frontiers.
-      if (best != UINT64_MAX &&
-          heap[0].top().first + heap[1].top().first >= best)
-        break;
-      int s = heap[1].top().first < heap[0].top().first;
-      auto [d, u] = heap[s].top();
-      heap[s].pop();
-      if (seen[1 - s][u] == epoch)
-        best = std::min(best, d + distance[1 - s][u]);
-      for (uint32_t i = offsets[s][u]; i < offsets[s][u + 1]; ++i) {
-        auto e = edges[s][i];
-        uint64_t nd = d + e.weight;
-        if (seen[s][e.to] != epoch || nd < distance[s][e.to]) {
-          seen[s][e.to] = epoch;
-          distance[s][e.to] = nd;
-          heap[s].push({nd, e.to});
-          if (seen[1 - s][e.to] == epoch)
-            best = std::min(best, nd + distance[1 - s][e.to]);
+      auto [source, target] = pairs[qi];
+      if (source == target) {
+        answers[qi] = 0;
+        continue;
+      }
+      ++epoch;
+      Heap heap[2];
+      distance[0][source] = 0;
+      seen[0][source] = epoch;
+      heap[0].push({0, source});
+      distance[1][target] = 0;
+      seen[1][target] = epoch;
+      heap[1].push({0, target});
+      uint64_t best = UINT64_MAX;
+      for (;;) {
+        for (int s = 0; s < 2; ++s)
+          while (!heap[s].empty() &&
+                 heap[s].top().first != distance[s][heap[s].top().second])
+            heap[s].pop();
+        if (heap[0].empty() || heap[1].empty())
+          break;
+        if (best != UINT64_MAX &&
+            heap[0].top().first + heap[1].top().first >= best)
+          break;
+        int s = heap[1].top().first < heap[0].top().first;
+        auto [d, u] = heap[s].top();
+        heap[s].pop();
+        if (seen[1 - s][u] == epoch)
+          best = std::min(best, d + distance[1 - s][u]);
+        for (uint32_t i = offsets[s][u]; i < offsets[s][u + 1]; ++i) {
+          auto e = edges[s][i];
+          uint64_t nd = d + e.weight;
+          if (seen[s][e.to] != epoch || nd < distance[s][e.to]) {
+            seen[s][e.to] = epoch;
+            distance[s][e.to] = nd;
+            heap[s].push({nd, e.to});
+            if (seen[1 - s][e.to] == epoch)
+              best = std::min(best, nd + distance[1 - s][e.to]);
+          }
         }
       }
+      answers[qi] = best == UINT64_MAX ? -1 : int64_t(best);
     }
-    if (best == UINT64_MAX)
-      output << "-1\n";
-    else
-      output << best << '\n';
-  }
+  };
+  std::vector<std::thread> workers;
+  for (size_t i = 0; i < std::min<size_t>(4, pairs.size()); ++i)
+    workers.emplace_back(worker);
+  for (auto &thread : workers)
+    thread.join();
+  std::filesystem::create_directories(out);
+  std::ofstream output(out + "/distances.txt", std::ios::binary);
+  for (auto answer : answers)
+    output << answer << '\n';
   return output ? 0 : 1;
 }
