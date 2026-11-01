@@ -101,7 +101,7 @@ def main():
         source = root / "track-c/main.cpp"
         if "C_FORCE_COLLISIONS" not in source.read_text(encoding="utf-8"):
             raise RuntimeError("Track C lacks the forced-collision validation hook")
-        subprocess.run([args.compiler, "-std=c++17", "-O3", "-pthread",
+        subprocess.run([args.compiler, "-std=c++17", "-O3", "-DNDEBUG", "-static", "-pthread",
                         "-DC_FORCE_COLLISIONS", str(source), "-o", str(collision)],
                        check=True)
     spec = importlib.util.spec_from_file_location("c_adversarial_reference",

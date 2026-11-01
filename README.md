@@ -6,9 +6,9 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 | Track | Inputs | Output | Approach |
 |---|---|---|---|
-| A Ingest | `requests.log` | `summary.txt` | Map input read-only, intern endpoint views, use the specified 72 UTC-hour buckets, count and scatter 32-bit latencies with six line-aligned workers, select exact nearest ranks, and write bounded integer-formatted output. |
+| A Ingest | `requests.log` | `summary.txt` | Map input read-only, intern endpoint views, use the specified 72 UTC-hour buckets, count and scatter 32-bit latencies with eight line-aligned workers, select exact nearest ranks, and write bounded integer-formatted output. |
 | B Index | `docs.txt`, `queries.txt` | `results.txt` | Read queries first; tokenize ASCII bytes once per corpus range, build only needed BOOL postings, and match all phrases with a shared token-level Aho-Corasick automaton. Apply exact left-associative set operations and emit count, ID sum and ten smallest IDs. |
-| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A quote-parity scan creates safe ranges for six CSV parsers. Direct region lookup, exact shared name interning and atomic country bitmaps feed private integer-cent aggregates. |
+| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | Local quote anchors with a full-parity fallback create safe ranges for six CSV parsers. Direct region lookup, exact inline name slots with overflow and atomic country bitmaps feed private integer-cent aggregates. |
 | D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build BFS-reordered forward/reverse CSR arrays and run bidirectional Dijkstra with radix queues, heap-count balancing, private epoch labels and four query workers. Preserve parallel edges, zero weights and query order. |
 
 ## Verified live Board results
@@ -26,6 +26,8 @@ A's two-pass parser improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.
 
 The earlier four-agent batch raised best-three machine points from48.541813 to56.795715. These are practice machine scores; holdout data and human judging determine final results. Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. All four published full seed-1 hashes match. Private-counter and CRC alternatives for A were rejected after measurement; B/D alternatives remain isolated.
 
+The next A/C candidate tests eight A workers and combines exact local CSV boundaries with a compact concurrent name table. Independent differential, collision and publication tests passed locally; its Linux CI and official Board comparison are pending. The measured table above remains the verified baseline until then.
+
 ## Build and validate
 
 ```sh
@@ -36,6 +38,7 @@ g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-d/main.cpp -o track-d/solutio
 git clone https://github.com/hackathon-raptors/speed-demon-2026 ../official
 git -C ../official checkout --detach 158894dcefde61f459c0adfae841900458dbeb7f
 python3 tools/edge_cases.py ../official
+python3 tools/c_adversarial.py . ../official
 python3 tools/verify.py --official ../official --scale sample --seeds 1 7
 ```
 

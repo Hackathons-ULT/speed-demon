@@ -26,6 +26,7 @@ jobs:
       - name: Verify fixtures, random graphs, and multiple generator seeds
         run: |
           python3 tools/edge_cases.py ../official
+          python3 tools/c_adversarial.py . ../official
           python3 tools/verify.py --official ../official --scale tiny --seeds 1 7 42
           python3 tools/verify.py --official ../official --scale sample --seeds 1
           python3 tools/verify.py --official ../official --scale sample --seeds 7 42
