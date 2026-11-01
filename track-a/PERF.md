@@ -60,3 +60,13 @@ The packed-record variant is byte-correct against the official reference for ful
 Alternating Windows full-data medians (three runs each) were **1.324640 s** for base501 and **0.542404 s** for packed records plus parallel output. A diagnostic phase profile before parallel output measured load0.367s / parse0.102s / prefix0.001s / scatter0.018s / rank0.010s / serial output0.071s. These are local development observations under variable host load, not official score claims. The packed buffer trades peak memory for parsing once; glibc arena retention can affect the real peak.
 
 Official Board result for the packed-throughput candidate: **pending**. Linux CI and genuine K comparison remain required.
+
+## Lower-memory throughput variant: count then reparse
+
+This default variant removes the eight-byte temporary record array. Six workers count groups/errors in their line-aligned ranges, a prefix sum creates exact flat latency regions, then the same six ranges are reread to parse and atomically scatter latencies. The mapped input is immutable, so endpoint keys and group identities are unchanged between passes. Key publication uses explicit acq_rel/acquire CAS ordering; a single atomic claim per hour supplies its output prefix, read only after worker joins. Ranks and output formatting keep the parallel phase ownership described above.
+
+This exact variant passed all cached full/sample/tiny oracle comparisons and fresh samples42/tiny99/1009, empty input and the randomized contract fixture. It also passed the100,000-record single-group contention case ten times and the forced-all-endpoints-collide version ten times. All comparisons are whole-file byte equality against the unmodified official reference. The full1 SHA-256 remains `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`.
+
+Three alternating local Windows full-data runs each gave base501 median **1.426016 s** and two-pass median **0.543406 s**. Its diagnostic phase profile was load0.174s / count0.082s / prefix0.0015s / parse-and-scatter0.071s / rank0.011s / parallel format-and-write0.015s. Packed records plus parallel output had essentially the same local median (**0.542404 s**) in a separate run, but retain roughly25MB of temporary records and may retain allocator pages; the two-pass variant avoids that allocation. Metadata, latencies and formatting suggest roughly30–35MB auxiliary peak for the two-pass version, an analytical estimate rather than an observed Board memory value.
+
+Official Board result for the two-pass throughput variant: **pending**. The coordinator should compare real time, peak, source and K with the verified four-shard baseline before keeping it. No official score is claimed from these local measurements.

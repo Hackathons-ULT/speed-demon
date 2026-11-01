@@ -71,19 +71,6 @@ struct Group {
   std::atomic<uint32_t> count{0}, errors{0};
   std::array<uint32_t, 3> ranks;
 };
-// Fixed-size record blocks avoid reallocating or over-reserving the whole log.
-struct Records {
-  std::vector<std::unique_ptr<uint64_t[]>> blocks;
-  size_t size = 0;
-  void push(uint64_t value) {
-    if (size % 4096 == 0)
-      blocks.emplace_back(new uint64_t[4096]);
-    blocks.back()[size++ % 4096] = value;
-  }
-  uint64_t operator[](size_t index) const {
-    return blocks[index / 4096][index % 4096];
-  }
-};
 int main(int argc, char **argv) {
   std::string data = argc > 1 ? argv[1] : "/data",
               out = argc > 2 ? argv[2] : "/out";
@@ -92,7 +79,6 @@ int main(int argc, char **argv) {
   for (auto &key : keys)
     key.store(nullptr, std::memory_order_relaxed);
   auto groups = std::make_unique<Group[]>(Groups);
-  std::array<Records, Workers> records;
   std::array<std::string_view, Hours> hours{};
   std::array<std::atomic<bool>, Hours> seen_hour;
   for (auto &flag : seen_hour)
@@ -134,7 +120,6 @@ int main(int argc, char **argv) {
   }
   parallel([&](size_t worker) {
     const char *p = bounds[worker], *end = bounds[worker + 1];
-    auto &rows = records[worker];
     while (p < end) {
       const char *ts = p;
       p += 28;
@@ -153,13 +138,8 @@ int main(int argc, char **argv) {
       groups[group].count.fetch_add(1, std::memory_order_relaxed);
       if (p[1] == '5')
         groups[group].errors.fetch_add(1, std::memory_order_relaxed);
-      p += 5;
-      uint32_t value = 0;
-      while (p < end && *p != '\n')
-        value = value * 10 + *p++ - '0';
-      if (p < end)
-        ++p;
-      rows.push((uint64_t(value) << 32) | group);
+      p = static_cast<const char *>(memchr(p + 5, '\n', size_t(end - p - 5))) +
+          1;
     }
   });
   std::vector<uint32_t> offsets(Groups + 1);
@@ -170,15 +150,29 @@ int main(int argc, char **argv) {
   }
   std::unique_ptr<uint32_t[]> values(new uint32_t[offsets.back()]);
   parallel([&](size_t worker) {
-    auto &rows = records[worker];
-    for (size_t i = 0; i < rows.size; ++i) {
-      uint64_t row = rows[i];
-      uint32_t key = uint32_t(row);
+    const char *p = bounds[worker], *end = bounds[worker + 1];
+    while (p < end) {
+      const char *ts = p;
+      p += 28;
+      p = static_cast<const char *>(memchr(p, ' ', size_t(end - p))) + 1;
+      const char *name = p;
+      p = static_cast<const char *>(memchr(p, ' ', size_t(end - p)));
+      size_t endpoint = intern(std::string_view(name, size_t(p - name)));
+      int day = 10 * (ts[8] - '0') + ts[9] - '0';
+      int hour = ((ts[6] == '0' ? day - 30 : day + 1) * 24 +
+                  10 * (ts[11] - '0') + ts[12] - '0') -
+                 18;
+      uint32_t group = uint32_t(endpoint * Hours + hour);
+      p += 5;
+      uint32_t value = 0;
+      while (p < end && *p != '\n')
+        value = value * 10 + *p++ - '0';
+      if (p < end)
+        ++p;
       uint32_t position =
-          groups[key].count.fetch_add(1, std::memory_order_relaxed);
-      values[offsets[key] + position] = uint32_t(row >> 32);
+          groups[group].count.fetch_add(1, std::memory_order_relaxed);
+      values[offsets[group] + position] = value;
     }
-    rows.blocks.clear();
   });
   parallel([&](size_t worker) {
     for (size_t key = worker; key < Groups; key += Workers) {
