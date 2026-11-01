@@ -48,3 +48,15 @@ Local Windows GCC16.1 validation matched the unmodified official reference on fu
 Alternating full-data development runs under concurrent host load gave base501 median **3.217355 s** and this candidate median **2.509646 s** (three runs each). A smaller selection-only experiment gave about8% local median improvement. Host timings were noisy, so neither observation is an official speedup or a coefficient claim. The extra scans, code and rank fields are priced trade-offs and need a genuine Board comparison.
 
 Official Board result for the four-shard candidate: **pending**. Do not replace the baseline based on local time alone; the coordinator should retain it only after Linux sandbox/correctness checks and a measured K improvement.
+
+## Track A agent: contiguous parse, flat latency storage, parallel output
+
+The four-shard candidate subsequently passed the genuine Board: T **0.249200 s**, peak **36,372,480 bytes**, S **200**, K **13.524502**, machine points **56.556065**. The full official run ID is pending the coordinator's retained receipt; it is deliberately not invented here.
+
+The next experiment replaces repeated whole-file endpoint scans with six contiguous line-aligned parser ranges and immutable concurrently interned keys. Atomic counts plus prefix sums and atomic scatter cursors create one flat latency array without per-group vector growth. Progressive exact ranks are selected in parallel. Six formatters create consecutive hour ranges in private strings, which the main thread writes in order. README.md gives the publication, cursor-ownership and join invariants.
+
+The packed-record variant is byte-correct against the official reference for full seed1; samples1/7/42; tiny1/7/42/99/1009; empty input; a randomized10,201-line contract fixture repeated three times; a100,000-record single-group contention fixture repeated ten times; and the common interning/scatter core passed forced endpoint-hash collisions repeated ten times (test binary changes only the initial hash slot). Output for full1 is unchanged at `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`.
+
+Alternating Windows full-data medians (three runs each) were **1.324640 s** for base501 and **0.542404 s** for packed records plus parallel output. A diagnostic phase profile before parallel output measured load0.367s / parse0.102s / prefix0.001s / scatter0.018s / rank0.010s / serial output0.071s. These are local development observations under variable host load, not official score claims. The packed buffer trades peak memory for parsing once; glibc arena retention can affect the real peak.
+
+Official Board result for the packed-throughput candidate: **pending**. Linux CI and genuine K comparison remain required.
