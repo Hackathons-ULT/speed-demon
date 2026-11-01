@@ -63,7 +63,7 @@ struct Input {
 #endif
 };
 
-constexpr size_t Workers = 6, Slots = 4096, Hours = 72, Groups = Slots * Hours;
+constexpr size_t Workers = 8, Slots = 4096, Hours = 72, Groups = Slots * Hours;
 struct Key {
   std::string_view name;
 };

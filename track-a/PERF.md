@@ -104,3 +104,15 @@ Distribution-aware planning remains exact: seed-dependent Zipf ranks do not iden
 ## Identical-code repeat: retain lifetime cleanup
 
 Commit `3885b0234e7da070a64dd4cd8b15e2e67d5ec123` changes only documentation/receipts from `3c2fd57`; the implementation is byte-identical. Official repeat `run-2dc57cb646ef` passed every gate: T **0.101086 s**, M **28717056 bytes**, S **259**, K **21.415881**, machine points **66.536797**. The baseline was0.100145 s /42,950,656 bytes /K19.909976. The first lifetime run's0.122014 s /29,028,352 bytes /K19.450919 is retained above, not discarded. The repeat restores comparable runtime while confirming the lower memory; retain this small lifetime change. Public practice runs remain noisy and do not establish final holdout performance.
+
+## Worker-count experiment: eight workers
+
+This candidate changes only `Workers` from six to eight. Every input range, rank group and output-hour range still has exactly one owner in each parallel phase. The existing lifetime releases and exact uint32/parser/collision behavior remain unchanged. More threads can cost stack/allocator memory, so this is a Board experiment rather than a claimed coefficient gain.
+
+A serialized Windows GCC16.1 full-seed1 sweep, with four alternating runs per configuration, measured medians: three workers0.722648s, four0.636345s, six0.601167s, eight0.532784s, twelve0.562270s. A separate six-run-per-configuration diagnostic measured six-worker median0.583419s and eight-worker0.563659s. Median count/prefix and scatter phases were0.115615/0.062053s versus0.099069/0.055734s respectively. The Windows private input copy, filesystem variation and host scheduling prevent treating these as official timing or K measurements. Every full output matched SHA-256 `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`.
+
+Eight workers also matched whole-file official-reference outputs for cached tiny1/7/42 and samples1/7, fresh tiny7919 and sample20261101, empty input, and the deterministic6,775-row adversarial fixture. The fixture is independently checked against the official reference. Local scripts and raw evidence remain outside the submission at `agents/a-primary2/.validation/bench-workers-compact.json`, `profiles-compact.json` and `validation-compact-stream.json`.
+
+Separate compact-endpoint metadata and bounded-output pipeline prototypes remain experimental. In six alternating runs each, baseline0.629041s, compact0.714149s and compact plus bounded writer0.665136s did not show a reliable speed gain. Windows peak private bytes were261,369,856 /259,043,328 /256,477,184 respectively, including the input copy. Their memory effect on Linux cgroup scoring is unverified; neither prototype is included in this worker-count candidate.
+
+Official eight-worker result: pending native Linux CI and genuine Board comparison. Source/dependency measurement must remain unchanged apart from any formatter effects; no new runtime package dependency was introduced.
