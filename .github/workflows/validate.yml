@@ -1,7 +1,7 @@
 name: Validate entry
 on:
   push:
-    branches: [speed-demon, codex/acd-cpp]
+    branches: [speed-demon, 'codex/**']
   pull_request:
     branches: [speed-demon]
   workflow_dispatch:
@@ -27,6 +27,7 @@ jobs:
           python3 tools/edge_cases.py ../official
           python3 tools/verify.py --official ../official --scale tiny --seeds 1 7 42
           python3 tools/verify.py --official ../official --scale sample --seeds 1
+          python3 tools/verify.py --official ../official --scale sample --seeds 7 42
       - name: Verify offline builds and sandbox execution
         run: |
           docker pull gcc:15@sha256:eb5e64286ad47187b32bda75c6b6916166ecb41da56559b8b09e0001748d2cce

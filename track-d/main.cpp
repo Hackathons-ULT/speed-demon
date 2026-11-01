@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
@@ -47,7 +48,39 @@ struct Raw {
   uint32_t from, to, weight;
 };
 using Item = std::pair<uint64_t, uint32_t>;
-using Heap = std::priority_queue<Item, std::vector<Item>, std::greater<Item>>;
+// Dijkstra inserts keys no smaller than the last key popped from that queue.
+// A radix heap uses that monotonicity without a logarithmic binary-heap sift.
+struct Heap {
+  std::array<std::vector<Item>, 65> buckets;
+  uint64_t last = 0;
+  size_t count = 0;
+  static unsigned bucket(uint64_t value) {
+    return value ? 64u - unsigned(__builtin_clzll(value)) : 0u;
+  }
+  bool empty() const { return count == 0; }
+  void push(Item item) {
+    buckets[bucket(item.first ^ last)].push_back(item);
+    ++count;
+  }
+  Item top() {
+    if (buckets[0].empty()) {
+      unsigned i = 1;
+      while (buckets[i].empty())
+        ++i;
+      last = UINT64_MAX;
+      for (auto item : buckets[i])
+        last = std::min(last, item.first);
+      for (auto item : buckets[i])
+        buckets[bucket(item.first ^ last)].push_back(item);
+      buckets[i].clear();
+    }
+    return buckets[0].back();
+  }
+  void pop() {
+    buckets[0].pop_back();
+    --count;
+  }
+};
 int main(int argc, char **argv) {
   std::string data = argc > 1 ? argv[1] : "/data",
               out = argc > 2 ? argv[2] : "/out";
