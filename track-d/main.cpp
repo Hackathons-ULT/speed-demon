@@ -96,11 +96,12 @@ int main(int argc, char **argv) {
     graph.next(e.from);
     graph.next(e.to);
     graph.next(e.weight);
-    ++offsets[0][e.from + 1];
-    ++offsets[1][e.to + 1];
   }
   std::vector<Edge> edges[2];
-  for (int side = 0; side < 2; ++side) {
+  auto build = [&](int side) {
+    std::fill(offsets[side].begin(), offsets[side].end(), 0);
+    for (auto e : raw)
+      ++offsets[side][(side ? e.to : e.from) + 1];
     for (uint32_t i = 1; i <= n; ++i)
       offsets[side][i] += offsets[side][i - 1];
     edges[side].resize(m);
@@ -109,7 +110,37 @@ int main(int argc, char **argv) {
       auto u = side ? e.to : e.from, v = side ? e.from : e.to;
       edges[side][cursor[u]++] = {v, e.weight};
     }
+  };
+  build(0);
+  // Input IDs are random. BFS numbering makes nearby graph vertices and their
+  // adjacency/label arrays nearby in memory; it changes no edge or weight.
+  std::vector<uint32_t> remap(n, UINT32_MAX), order;
+  order.reserve(n);
+  size_t head = 0;
+  for (uint32_t root = 0; root < n; ++root) {
+    if (remap[root] != UINT32_MAX)
+      continue;
+    remap[root] = uint32_t(order.size());
+    order.push_back(root);
+    while (head < order.size()) {
+      auto u = order[head++];
+      for (auto i = offsets[0][u]; i < offsets[0][u + 1]; ++i) {
+        auto v = edges[0][i].to;
+        if (remap[v] == UINT32_MAX) {
+          remap[v] = uint32_t(order.size());
+          order.push_back(v);
+        }
+      }
+    }
   }
+  for (auto &e : raw) {
+    e.from = remap[e.from];
+    e.to = remap[e.to];
+  }
+  build(0);
+  build(1);
+  order.clear();
+  order.shrink_to_fit();
   raw.clear();
   raw.shrink_to_fit();
 
@@ -117,7 +148,9 @@ int main(int argc, char **argv) {
   std::vector<std::pair<uint32_t, uint32_t>> pairs;
   uint32_t source, target;
   while (queries.next(source) && queries.next(target))
-    pairs.push_back({source, target});
+    pairs.push_back({remap[source], remap[target]});
+  remap.clear();
+  remap.shrink_to_fit();
   std::vector<int64_t> answers(pairs.size());
   std::atomic<size_t> next{0};
   auto worker = [&] {
@@ -148,17 +181,21 @@ int main(int argc, char **argv) {
       heap[1].push({0, target});
       uint64_t best = UINT64_MAX;
       for (;;) {
-        for (int s = 0; s < 2; ++s)
-          while (!heap[s].empty() &&
-                 heap[s].top().first != distance[s][heap[s].top().second])
+        Item frontier[2];
+        for (int s = 0; s < 2; ++s) {
+          while (!heap[s].empty()) {
+            frontier[s] = heap[s].top();
+            if (frontier[s].first == distance[s][frontier[s].second])
+              break;
             heap[s].pop();
+          }
+        }
         if (heap[0].empty() || heap[1].empty())
           break;
-        if (best != UINT64_MAX &&
-            heap[0].top().first + heap[1].top().first >= best)
+        if (best != UINT64_MAX && frontier[0].first + frontier[1].first >= best)
           break;
-        int s = heap[1].top().first < heap[0].top().first;
-        auto [d, u] = heap[s].top();
+        int s = frontier[1].first < frontier[0].first;
+        auto [d, u] = frontier[s];
         heap[s].pop();
         if (seen[1 - s][u] == epoch)
           best = std::min(best, d + distance[1 - s][u]);

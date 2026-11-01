@@ -46,4 +46,18 @@ The candidate keeps the measured radix-heap search and runs at most four indepen
 
 Handwritten edge fixtures and all 12,500 independently computed random shortest-path answers pass, including parallel, zero-weight, unreachable and over-uint32 paths. Existing seed-1 full data and multiple tiny/sample seeds remain correctness gates. Expanded Linux CI will additionally exercise the POSIX mapping path and offline container sandbox.
 
-Official Board result for iteration 3: pending. No timing, memory, coefficient or run ID for this new candidate is claimed yet.
+Official Board result for iteration 3: `run-b601407e09bb` at `501bd050342bba076e29b250f560f614230c3e5d`, T **1.517466 s**, peak **276451328 bytes**, K **6.980301**, machine points **42.193707**. All gates passed. The measured K improved over the single-worker radix version despite the extra label memory, so the four-worker version was retained.
+
+## Cache-local numbering and cached queue frontiers
+
+The coordinator measured the four-worker radix baseline at commit `501bd050342bba076e29b250f560f614230c3e5d`: `run-b601407e09bb`, T **1.517466 s**, peak **276451328 bytes**, K **6.980301**, machine points **42.193707**, with every gate passing.
+
+This candidate builds a forward CSR, visits every component with BFS, and assigns consecutive vertex IDs in discovery order. It applies the resulting bijection to every edge endpoint and every query endpoint, then rebuilds both CSR directions. Parallel edges, weights, self-loops, isolated vertices and directed reachability are unchanged. No graph-derived state is retained between executions. All relabeling and rebuilding is included in the timed process. The permutation and BFS order are freed before query-worker labels are allocated.
+
+After stale heap entries are discarded, each search iteration caches its two valid frontier entries instead of repeatedly querying the same radix buckets. The stopping rule and expansion choice remain unchanged.
+
+Validation against the unmodified official reference passes the published full seed-1 hash `a23dbdf0a3e49cc8901310a9ee1dc6a9a569a85297b6da75c2a7002cb2ed277e`, sample seeds 1, 7 and 42, and tiny seeds 1, 7, 42, 31337 and 65537. The extra sample-42 hash is `e003ecd1553a9010cca836975f759aa8588403070e83ed359cc3fd991a2275a6`. A separate heapq oracle verifies 15,000 all-pairs answers over 24 random directed multigraphs, including zero and UINT32_MAX weights, disconnected vertices, duplicate/parallel edges and self-loops.
+
+Local Windows timing is development evidence only. Under concurrent agent load, three alternating full-data runs before frontier caching measured baseline **10.445, 19.003, 17.261 s** and BFS candidate **14.314, 13.867, 10.859 s**. The medians favor BFS by roughly 20%, but the large spread rules out a precise claim. A later cached-frontier correctness run took **3.748 s** under lighter load and is not comparable to those earlier runs. Raw local evidence is in the isolated worktree's ignored `.validation/benchmark-interleaved.json` and `.validation/benchmark.json`.
+
+Official Board measurement for this cache-local candidate: pending. Its extra preprocessing and source lines must earn their cost through measured K before the coordinator retains it.
