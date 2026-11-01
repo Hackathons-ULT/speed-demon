@@ -13,18 +13,18 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 ## Verified live Board results
 
-The official Board scored all four tracks at commit `ee4c7f93fecc931685df611fc7bff97e3aadfd6d` on November 1. All correctness, build, timeout and sandbox gates passed. Expanded Linux validation, multi-seed comparisons, concurrency stress and offline container execution also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697).
+The official Board scored all four tracks at commit `3c2fd576c90e3396bcdc4d04ce8677021436188d` on November 1. All check, build, correctness, timeout and sandbox gates passed. The Track A lifetime change and independent adversarial fixture passed expanded Linux CI and offline container execution: [CI 41315064433](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41315064433).
 
 | Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
 |---|---|---:|---:|---:|---:|
-| A | `run-857a5cabbd8f` | 0.100145 | 42.95 | 19.909976 | 64.953537 |
-| B | `run-13409d072f12` | 1.363277 | 229.44 | 8.062158 | 45.322565 |
-| C | `run-25fcd477d5c1` | 0.163784 | 13.66 | 14.893873 | 58.650382 |
-| D | `run-6263ce34bb35` | 0.842696 | 273.14 | 9.158841 | 48.092026 |
+| A | `run-5203d23e4e97` | 0.122014 | 29.03 | 19.450919 | 64.447006 |
+| B | `run-605129b1a988` | 1.436493 | 230.16 | 7.849115 | 44.741033 |
+| C | `run-8010ef37f93a` | 0.185159 | 13.18 | 14.109089 | 57.474948 |
+| D | `run-0948b9b60deb` | 0.887435 | 272.69 | 8.927937 | 47.537555 |
 
-Compared with the first four-agent batch (`3733f64`), A improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.909976, and C from 0.738735 s / K 7.339179 to 0.163784 s / K 14.893873. The best-three geometric mean machine points increased from 48.541813 to 56.795715. B and D also recorded higher K; smaller practice deltas may include single-run noise.
+A's two-pass parser improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.909976. The subsequent lifetime change measured 0.122014 s, 29.03 MB and K 19.450919, a lower first-run coefficient despite lower memory. A repeat comparison is pending before retention. The code for B/C/D is unchanged since `ee4c7f9`; differences in their latest practice times are run variation.
 
-Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. These are practice machine scores; holdout data and human judging determine final results. All four published full seed-1 hashes match. Active optimization is now focused on A; unmerged B/D experiments remain isolated.
+The earlier four-agent batch raised best-three machine points from 48.541813 to 56.795715. These are practice machine scores; holdout data and human judging determine final results. Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. All four published full seed-1 hashes match. B/D alternative experiments remain isolated while current work focuses on A.
 
 ## Build and validate
 
@@ -34,6 +34,7 @@ g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-b/main.cpp -o track-b/solutio
 g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-c/main.cpp -o track-c/solution
 g++ -std=c++17 -O3 -DNDEBUG -static -pthread track-d/main.cpp -o track-d/solution
 git clone https://github.com/hackathon-raptors/speed-demon-2026 ../official
+git -C ../official checkout --detach 158894dcefde61f459c0adfae841900458dbeb7f
 python3 tools/edge_cases.py ../official
 python3 tools/verify.py --official ../official --scale sample --seeds 1 7
 ```
