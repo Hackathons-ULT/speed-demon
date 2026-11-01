@@ -36,3 +36,15 @@ The candidate maps input read-only on Linux, interns endpoint views once, and us
 Handwritten edge fixtures and all 12,500 independently computed random shortest-path answers pass, including parallel, zero-weight, unreachable and over-uint32 paths. Existing seed-1 full data and multiple tiny/sample seeds remain correctness gates. Expanded Linux CI will additionally exercise the POSIX mapping path and offline container sandbox.
 
 Official Board result for iteration 3: pending. No timing, memory, coefficient or run ID for this new candidate is claimed yet.
+
+## Track A agent: disjoint endpoint shards and progressive rank selection
+
+The coordinator verified the mapped-input iteration-3 baseline on the official Board: `run-6e7dcf2a13d6`, T **0.481109 s**, peak **35,405,824 bytes**, S **154**, D **1**, K **10.177465**, machine points **50.381980**; all gates passed. This is the comparison baseline for the candidate below.
+
+Four workers scan the shared read-only mapping and own disjoint endpoint-hash shards. Only a record's owner parses its time/status/latency and writes its group. Every latency is stored once; no group locks, atomic counters or cross-worker latency copying are needed. Groups up to 64 items retain sorting; larger groups use three progressive exact nearest-rank selections. README.md explains the ownership and rank invariants.
+
+Local Windows GCC16.1 validation matched the unmodified official reference on full seed1; samples1/7/42; tiny seeds1/7/42/99/1009; empty input; and a 10,201-line randomized contract fixture with duplicates, all 72 hours, status values spanning100–599, zero/UINT32_MAX latencies, max-length endpoints and an isolated101-item rank group. The randomized fixture was repeated three times with identical bytes. The full seed1 output remains `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`.
+
+Alternating full-data development runs under concurrent host load gave base501 median **3.217355 s** and this candidate median **2.509646 s** (three runs each). A smaller selection-only experiment gave about8% local median improvement. Host timings were noisy, so neither observation is an official speedup or a coefficient claim. The extra scans, code and rank fields are priced trade-offs and need a genuine Board comparison.
+
+Official Board result for the four-shard candidate: **pending**. Do not replace the baseline based on local time alone; the coordinator should retain it only after Linux sandbox/correctness checks and a measured K improvement.
