@@ -194,6 +194,8 @@ int main(int argc, char **argv) {
       }
     }
   });
+  values.reset();
+  std::vector<uint32_t>().swap(offsets);
   std::vector<size_t> order;
   for (size_t i = 0; i < Slots; ++i)
     if (keys[i].load())
@@ -239,10 +241,13 @@ int main(int argc, char **argv) {
         text_output.append(buffer, size_t(cursor - buffer));
       }
   });
+  groups.reset();
   std::filesystem::create_directories(out);
   std::ofstream output(out + "/summary.txt", std::ios::binary);
-  for (auto &buffer : formatted)
+  for (auto &buffer : formatted) {
     output.write(buffer.data(), buffer.size());
+    std::string().swap(buffer);
+  }
   for (auto &slot : keys)
     delete slot.load();
   return output ? 0 : 1;

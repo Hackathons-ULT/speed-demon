@@ -81,3 +81,14 @@ These exact practice Board receipts resolve the pending measurements above. All 
 | `ee4c7f9` | `run-857a5cabbd8f` | 0.100145 | 42950656 | 254 | 19.909976 | 64.953537 |
 
 The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.
+## Track A independent challenge: release storage at its last phase
+
+The coordinator verified the two-pass baseline at commit `ee4c7f93fecc931685df611fc7bff97e3aadfd6d`: official run `run-857a5cabbd8f`, T **0.100145 s**, peak **42,950,656 bytes**, S **254**, K **19.909976**, machine points **64.953537**; all gates passed. This is the comparison baseline, not a result for the lifetime candidate.
+
+The harness measures the run's parent cgroup `memory.peak`, and output-file pages are charged there. The previous candidate kept latency values, prefix offsets and groups alive throughout output. This small candidate releases values/offsets immediately after rank selection joins, groups after formatting joins, and each formatted string after its synchronous write. Three reviewers inspected those phase boundaries; no view, cursor or worker uses released storage. Exact parsing, interning, ranks and formatting remain unchanged.
+
+Whole-file comparisons against retained unmodified official references pass for full seed1, samples1/7 and tiny1/7/42. Full output SHA-256 remains `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`. Development commands and receipts are retained in the isolated `agents/a-challenger` workspace, outside the submission.
+
+Four alternating Windows full-data runs per version gave baseline median **0.557931 s** and candidate median **0.585992 s**, with one candidate outlier at 1.057128 s. No local speed improvement is claimed. Two Windows peak-working-set observations per version were **273,661,952 / 273,637,376 bytes** for baseline and **263,225,344 / 263,221,248 bytes** for the candidate. Windows includes a 238.8 MB private input copy and does not measure the Linux cgroup's output page cache, so these are development memory observations only.
+
+Official Board result for this storage-lifetime candidate: **pending**. Linux CI and a genuine coefficient comparison must price any time/source cost against measured peak-memory savings.
