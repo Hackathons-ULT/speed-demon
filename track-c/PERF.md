@@ -80,3 +80,9 @@ Correctness matches the full published SHA-256 `d8088b1cd42ba1338b1345b107b55db7
 Linux offline CI and official Board measurement for this candidate remain pending. Retention requires those gates and a measured coefficient improvement. AI-generated explanations do not establish human understanding.
 
 Publication-delay stress also passes: a temporary test-only build forced every name hash to zero, yielded 64 times after reserving an inline slot and eight times before chained-node publication, and ran twelve workers six times on each of a 1200-name collision case and a 30000-record single-empty-name case. Production code contains no delay.
+
+## Verified compact interner plus local boundaries
+
+Official `run-665989745270` at `4219f04ada1c48bf0cbc24ac4ddfc668c2d04547` passed check/build/correctness/timeout/sandbox: T **0.104737 s**, M **12771328 bytes**, S **448**, K **18.574002**, points **63.445275**. Baseline `run-5d7bcdd188f0` at `dffe550` was T 0.164836 s / M 13,295,616 bytes / S 402 / K 14.927698 / 58.699642 points. The combined change improves measured time by 36.5% and K by 24.4%, after paying the larger source cost. Retain it.
+
+Exact inline identities keep full-byte equality and monotone overflow, while structural quote anchors use a scalar full-parity fallback when ambiguous. The combined implementation matches the published full hash and cached multiple-seed references. Independent reviews passed 924 output checks for each component and 36,000 partition layouts; the new compact suite checks capacity overflow, giant/ambiguous quotes, fake numeric records inside quoted notes and forced collisions against the unmodified official reference. Linux CI 41318253758, including offline static builds and sandbox execution, passed. These are public practice measurements, not final holdout results.
