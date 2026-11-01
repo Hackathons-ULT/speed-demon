@@ -48,6 +48,9 @@ for workers in (1,2,6,12):
     run("c",f"c-concurrent-{workers}",{"records.csv":stress,"regions.csv":c.RULES_REGIONS},expected,env)
 run("a","a-empty",{"requests.log":b""},b"")
 run("a","a-extreme",{"requests.log":b"2026-11-01T00:00:00.000000Z GET / 499 4294967295\n2026-11-01T00:00:00.000000Z GET / 599 0\n"},b"2026-11-01T00:00:00Z / 2 0 4294967295 4294967295 1 500000\n")
+from a_fixture import fixture
+a_records,a_expected=fixture()
+run("a","a-adversarial",{"requests.log":a_records},a_expected)
 for seed in range(20):
     rng=random.Random(seed);n=25
     edges=[(rng.randrange(n),rng.randrange(n),rng.choice([0,1,2,100,4294967295])) for _ in range(100)]
