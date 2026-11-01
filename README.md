@@ -13,18 +13,18 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 
 ## Verified live Board results
 
-The official Board scored all four tracks at commit `3c2fd576c90e3396bcdc4d04ce8677021436188d` on November 1. All check, build, correctness, timeout and sandbox gates passed. The Track A lifetime change and independent adversarial fixture passed expanded Linux CI and offline container execution: [CI 41315064433](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41315064433).
+The official Board scored all four tracks at commit `3885b0234e7da070a64dd4cd8b15e2e67d5ec123` on November 1. All check, build, correctness, timeout and sandbox gates passed. The Track A lifetime change and independent adversarial fixture passed expanded Linux CI and offline container execution: [CI 41315064433](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41315064433).
 
 | Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
 |---|---|---:|---:|---:|---:|
-| A | `run-5203d23e4e97` | 0.122014 | 29.03 | 19.450919 | 64.447006 |
-| B | `run-605129b1a988` | 1.436493 | 230.16 | 7.849115 | 44.741033 |
-| C | `run-8010ef37f93a` | 0.185159 | 13.18 | 14.109089 | 57.474948 |
-| D | `run-0948b9b60deb` | 0.887435 | 272.69 | 8.927937 | 47.537555 |
+| A | `run-2dc57cb646ef` | 0.101086 | 28.72 | 21.415881 | 66.536797 |
+| B | `run-3178781c3f72` | 1.320499 | 230.24 | 8.185985 | 45.653547 |
+| C | `run-f827504744ed` | 0.181778 | 13.48 | 14.175094 | 57.576298 |
+| D | `run-fd9eccef3929` | 0.836319 | 272.57 | 9.197531 | 48.183562 |
 
-A's two-pass parser improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.909976. The subsequent lifetime change measured 0.122014 s, 29.03 MB and K 19.450919, a lower first-run coefficient despite lower memory. A repeat comparison is pending before retention. The code for B/C/D is unchanged since `ee4c7f9`; differences in their latest practice times are run variation.
+A's two-pass parser improved from 0.249200 s / K 13.524502 to 0.100145 s / K 19.909976. Releasing storage after its last phase reduced peak memory from42.95 MB to28.72 MB; the repeat measured0.101086 s / K21.415881. Its first run was slower at0.122014 s / K19.450919; both receipts remain recorded. The lifetime change is retained after the repeat. B/C/D code is unchanged since `ee4c7f9`; their timing differences are practice-run variation.
 
-The earlier four-agent batch raised best-three machine points from 48.541813 to 56.795715. These are practice machine scores; holdout data and human judging determine final results. Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. All four published full seed-1 hashes match. B/D alternative experiments remain isolated while current work focuses on A.
+The earlier four-agent batch raised best-three machine points from48.541813 to56.795715. These are practice machine scores; holdout data and human judging determine final results. Exact receipts and earlier baselines remain in `board-results.json`, `board-results-history.json` and each PERF.md. All four published full seed-1 hashes match. Private-counter and CRC alternatives for A were rejected after measurement; B/D alternatives remain isolated.
 
 ## Build and validate
 
