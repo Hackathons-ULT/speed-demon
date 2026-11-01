@@ -7,8 +7,8 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 | Track | Inputs | Output | Approach |
 |---|---|---|---|
 | A Ingest | `requests.log` | `summary.txt` | Copy the fixed-width UTC hour, hash `(hour, endpoint)` groups, sort 32-bit latencies, select exact nearest ranks, and emit sorted groups. |
-| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A buffered CSV state machine handles quoting, embedded newlines and BOMs. Hash-join regions, aggregate exact integer cents, intern names globally, and count distinct names with country bitmaps. |
-| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with 64-bit distances and epoch stamps. Preserve parallel edges, zero weights, and query order. |
+| C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A read-only mapping and quote-aware span parser handle embedded newlines and BOMs. Direct numeric region lookup feeds exact integer-cent aggregates; globally interned names use country bitmaps. |
+| D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with 64-bit radix queues and epoch stamps. Preserve parallel edges, zero weights, and query order. |
 
 ## Verified live Board results
 
