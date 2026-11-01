@@ -194,7 +194,9 @@ int main(int argc, char **argv) {
           break;
         if (best != UINT64_MAX && frontier[0].first + frontier[1].first >= best)
           break;
-        int s = frontier[1].first < frontier[0].first;
+        // Balance frontier work, not distance scale. A huge-weight edge in a
+        // tiny component must not force the opposite search across the graph.
+        int s = heap[1].count < heap[0].count;
         auto [d, u] = frontier[s];
         heap[s].pop();
         if (seen[1 - s][u] == epoch)

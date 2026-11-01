@@ -61,3 +61,13 @@ Validation against the unmodified official reference passes the published full s
 Local Windows timing is development evidence only. Under concurrent agent load, three alternating full-data runs before frontier caching measured baseline **10.445, 19.003, 17.261 s** and BFS candidate **14.314, 13.867, 10.859 s**. The medians favor BFS by roughly 20%, but the large spread rules out a precise claim. A later cached-frontier correctness run took **3.748 s** under lighter load and is not comparable to those earlier runs. Raw local evidence is in the isolated worktree's ignored `.validation/benchmark-interleaved.json` and `.validation/benchmark.json`.
 
 Official Board measurement for this cache-local candidate: pending. Its extra preprocessing and source lines must earn their cost through measured K before the coordinator retains it.
+
+## Balance frontier work rather than distance scales
+
+The coordinator identified a pathological expansion order: an island query can leave a UINT32_MAX-weight forward spur while the reverse frontier lies in the giant component. Always choosing the smaller distance then exhausts the giant component before the tiny forward side finishes. A no-in source with huge outgoing weights has a similar imbalance risk.
+
+Only the expansion scheduling heuristic changes: expand the side with fewer queued heap entries. Each direction still pops its own exact minimum, and the termination rule remains `min_forward + min_reverse >= best`. All crossing-label updates remain. Arbitrary scheduling between the two Dijkstra searches does not alter that lower-bound proof; stale entries in the size count affect scheduling rather than correctness.
+
+Full seed-1 instrumentation found **14,313,226** expansions with distance balancing, including four queries that each expanded **1,740,378** vertices. Size balancing reduced the total to **7,123,603** and eliminated those outliers. A separate unreachable-island case with a large-weight spur fell from **10,002** expansions to **3**, retaining the exact `-1` answer. This demonstrates the mechanism independently of wall-clock noise.
+
+Local full-data development runs with the same BFS layout measured **3.210 s** for one worker, **2.435 s** for two, and **2.065 s** for four, all with the published expected hash. These are not official scores, and the worker/memory trade-off still needs a Board measurement. All cached tiny/sample datasets and the independent random-query oracle remain correctness gates. Official measurement of size balancing: pending.
