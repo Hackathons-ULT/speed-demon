@@ -65,3 +65,18 @@ These exact practice Board receipts resolve the pending measurements above. All 
 | `ee4c7f9` | `run-25fcd477d5c1` | 0.163784 | 13664256 | 402 | 14.893873 | 58.650382 |
 
 The measured candidate is retained. Linux validation, including offline builds and sandbox execution, passed at [CI 41313474697](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41313474697). Holdout correctness and final human judging remain separate from these public practice measurements.
+
+
+## Independent candidate: inline exact name identities
+
+The exact retained C baseline supplied by the coordinator is `run-5d7bcdd188f0` at integration commit `dffe550`: T 0.164836 s, M 13295616 bytes, S 402, K 14.927698, machine points 58.699642. This candidate changes name interning only; the current quote-parity partitioner, parser, membership bitmaps and aggregate merging remain in place.
+
+Most identities now occupy sixteen-byte open-addressed slots rather than a bucket pointer plus separately allocated node. The slot index supplies the ID. Hash tags are only filters and complete payload equality resolves collisions. Reserved slots publish immutable payloads with release/acquire ordering. A bounded probe window falls back to the original exact chained interner, allocated lazily, with a disjoint ID range. This preserves arbitrary distinct counts rather than assuming the generator name-pool size. The README explains why monotone occupied slots and waiting on reservations preserve one identity across both stores.
+
+Six alternating full-public Windows runs per implementation, serialized as a whole experiment with the shared benchmark lock, gave median times of 0.639279 s for the baseline and 0.538593 s for the candidate. Median Windows peak working sets were 221362176 and 219881472 bytes respectively. These include private input copies, differ from Linux mapping/cgroup accounting, and establish no official K or score. More source and larger sparse name-ID bitmaps remain priced trade-offs despite the local time/memory reduction. Local evidence is retained outside the submitted folder in ignored `.validation/inline-benchmark.json`.
+
+Correctness matches the full published SHA-256 `d8088b1cd42ba1338b1345b107b55db7b96ef1f5066f3ff64fd26a8912a0f536`, sample seeds 1/7, tiny seeds 1/7/42, official worked/rules fixtures, 6000 differential random CSV rows and the 110001-name case. Additional validation covers previously untested seed 20261102; 280003 distinct values, exceeding the inline capacity, with 1/2/6/12 workers; and 1200 distinct names in 12000 records with all name hashes forced to zero at 1/6/12 workers. Header-only records produce empty output. These exercise exact overflow, collisions and repeated identities without a catalogue or cached answer.
+
+Linux offline CI and official Board measurement for this candidate remain pending. Retention requires those gates and a measured coefficient improvement. AI-generated explanations do not establish human understanding.
+
+Publication-delay stress also passes: a temporary test-only build forced every name hash to zero, yielded 64 times after reserving an inline slot and eight times before chained-node publication, and ran twelve workers six times on each of a 1200-name collision case and a 30000-record single-empty-name case. Production code contains no delay.

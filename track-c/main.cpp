@@ -169,7 +169,14 @@ vector_ranges(const char *begin, const char *end, size_t workers) {
   cuts.push_back(end);
   return cuts;
 }
-struct Names {
+size_t name_hash(std::string_view value) {
+#ifdef C_FORCE_COLLISIONS
+  return 0;
+#else
+  return std::hash<std::string_view>{}(value);
+#endif
+}
+struct ChainNames {
   struct Node {
     std::string_view key;
     size_t hash;
@@ -180,12 +187,12 @@ struct Names {
   std::unique_ptr<std::atomic<Node *>[]> buckets{
       new std::atomic<Node *>[buckets_count]};
   std::atomic<uint32_t> next_id{0};
-  Names() {
+  ChainNames() {
     for (size_t i = 0; i < buckets_count; ++i)
       buckets[i].store(nullptr, std::memory_order_relaxed);
   }
   uint32_t intern(std::string_view value, std::deque<Node> &arena) {
-    size_t hash = std::hash<std::string_view>{}(value);
+    size_t hash = name_hash(value);
     auto &bucket = buckets[hash & (buckets_count - 1)];
     Node *head = bucket.load(std::memory_order_acquire), *fresh = nullptr;
     for (;;) {
@@ -206,6 +213,56 @@ struct Names {
                                        std::memory_order_acquire))
         return fresh->id;
     }
+  }
+};
+// Open addressing stores hot identities inline. Hashes only filter; full bytes
+// determine equality. Reserved slots publish their immutable payload with
+// release.
+struct Names {
+  using Node = ChainNames::Node;
+  struct Slot {
+    std::atomic<uint32_t> tag{0};
+    uint32_t length = 0;
+    const char *key = nullptr;
+  };
+  static constexpr uint32_t capacity = 131072, probes = 32;
+  std::unique_ptr<Slot[]> slots{new Slot[capacity]};
+  std::atomic<ChainNames *> overflow{nullptr};
+  ~Names() { delete overflow.load(); }
+  uint32_t intern(std::string_view value, std::deque<Node> &arena) {
+    size_t hash = name_hash(value);
+    uint32_t tag = uint32_t(hash >> 32) | 2;
+    uint32_t start = uint32_t(hash) & (capacity - 1);
+    if (value.size() <= UINT32_MAX)
+      for (uint32_t probe = 0; probe < probes; ++probe) {
+        uint32_t index = (start + probe) & (capacity - 1);
+        auto &slot = slots[index];
+        auto state = slot.tag.load(std::memory_order_acquire);
+        if (!state && slot.tag.compare_exchange_strong(
+                          state, 1, std::memory_order_acquire)) {
+          slot.length = uint32_t(value.size());
+          slot.key = value.data();
+          slot.tag.store(tag, std::memory_order_release);
+          return index;
+        }
+        while (state == 1)
+          state = slot.tag.load(std::memory_order_acquire);
+        if (state == tag && slot.length == value.size() &&
+            std::string_view(slot.key, slot.length) == value)
+          return index;
+      }
+    auto chain = overflow.load(std::memory_order_acquire);
+    if (!chain) {
+      auto fresh = new ChainNames;
+      fresh->next_id.store(capacity, std::memory_order_relaxed);
+      if (overflow.compare_exchange_strong(chain, fresh,
+                                           std::memory_order_release,
+                                           std::memory_order_acquire))
+        chain = fresh;
+      else
+        delete fresh;
+    }
+    return chain->intern(value, arena);
   }
 };
 struct Membership {
