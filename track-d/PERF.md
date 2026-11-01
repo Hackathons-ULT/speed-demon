@@ -16,6 +16,12 @@ Local development check: Windows x86-64, GCC 16.1.0 MinGW-w64, C++17 -O3 -DNDEBU
 
 Differential checks also pass on tiny seeds 1, 7, 42 and sample seeds 1, 7. Additional fixtures cover CSV quoting, BOMs within values, end-of-file, status/uint32 boundaries, empty input, and 12,500 independently computed graph-query answers. The three official reference test suites pass 43 tests. `validation.json` records the evidence.
 
-Board run ID for this C++ step: pending. Add the actual run ID, wall time, peak memory, K and points after the submission branch runs. No run ID has been fabricated. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
+Official Board result for the C++ step, commit `738832835b87dd40b567dac9cfd6ac4db2e9aa06`:
+
+| Run ID | T (s) | Peak memory (bytes) | Source lines | D | K | Machine points |
+|---|---:|---:|---:|---:|---:|---:|
+| `run-632362c7b696` | 5.841748 | 161996800 | 147 | 1 | 4.127217 | 30.782867 |
+
+The official run passed check, build, correctness, timeout and sandbox gates on the full public seed-1 dataset. This is the live practice Board, not the final holdout score. See `board-results.json` for the recorded receipt. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
 
 The primary change is forward/reverse CSR plus bidirectional Dijkstra and per-query epoch stamps. This removes Python edge tuples, avoids clearing all distance labels for short queries, and explores from both query endpoints. Zero weights and paths above 2^32 were validated explicitly.

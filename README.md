@@ -10,6 +10,18 @@ Each track is self-contained. It reads `/data`, writes exactly the required file
 | C Join | `records.csv`, `regions.csv` | `aggregates.txt` | A buffered CSV state machine handles quoting, embedded newlines and BOMs. Hash-join regions, aggregate exact integer cents, intern names globally, and count distinct names with country bitmaps. |
 | D Traverse | `graph.txt`, `queries.txt` | `distances.txt` | Build forward/reverse CSR arrays and run bidirectional Dijkstra with 64-bit distances and epoch stamps. Preserve parallel edges, zero weights, and query order. |
 
+## Verified live Board results
+
+The official Board scored all three active tracks at commit `738832835b87dd40b567dac9cfd6ac4db2e9aa06` on November 1. All correctness, build, timeout, and sandbox gates passed. Linux CI, including offline container execution, also [passed](https://github.com/Hackathons-ULT/speed-demon/actions/runs/41306885340).
+
+| Track | Run ID | Time (s) | Peak memory (MB, decimal) | K | Machine points |
+|---|---|---:|---:|---:|---:|
+| A | `run-d530eae56018` | 1.007284 | 65.63 | 7.197606 | 42.859403 |
+| C | `run-b5d77a1cbee5` | 2.974006 | 28.79 | 3.491075 | 27.147959 |
+| D | `run-632362c7b696` | 5.841748 | 162.00 | 4.127217 | 30.782867 |
+
+These are practice Board machine scores; the final holdout dataset and human judging determine final results. The three scored tracks meet the track-count requirement for the overall title. Track B remains unchanged. `board-results.json` retains the actual measurements and gate results.
+
 ## Build and validate
 
 ```sh

@@ -16,6 +16,12 @@ Local development check: Windows x86-64, GCC 16.1.0 MinGW-w64, C++17 -O3 -DNDEBU
 
 Differential checks also pass on tiny seeds 1, 7, 42 and sample seeds 1, 7. Additional fixtures cover CSV quoting, BOMs within values, end-of-file, status/uint32 boundaries, empty input, and 12,500 independently computed graph-query answers. The three official reference test suites pass 43 tests. `validation.json` records the evidence.
 
-Board run ID for this C++ step: pending. Add the actual run ID, wall time, peak memory, K and points after the submission branch runs. No run ID has been fabricated. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
+Official Board result for the C++ step, commit `738832835b87dd40b567dac9cfd6ac4db2e9aa06`:
+
+| Run ID | T (s) | Peak memory (bytes) | Source lines | D | K | Machine points |
+|---|---:|---:|---:|---:|---:|---:|
+| `run-b5d77a1cbee5` | 2.974006 | 28790784 | 150 | 1 | 3.491075 | 27.147959 |
+
+The official run passed check, build, correctness, timeout and sandbox gates on the full public seed-1 dataset. This is the live practice Board, not the final holdout score. See `board-results.json` for the recorded receipt. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
 
 Development steps: the first C++ state parser used stream peek/get and per-country string sets (sample seed 1: 2.130265 s). A buffered reader plus the same sets matched the full hash in 10.621314 s. Global name interning and growable per-country bitmaps reduced repeated name storage; the final full run is reported above. These are local experimental observations, not Board measurements.
