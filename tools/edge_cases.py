@@ -5,14 +5,15 @@ import random
 import subprocess
 import sys
 import unittest
+import os
 
 root = Path(__file__).resolve().parent.parent
 official=Path(sys.argv[1] if len(sys.argv)>1 else "../official").resolve()
-def run(track, name, files, expected):
+def run(track, name, files, expected, env=None):
     data=root/".validation"/"edge-data"/name
     data.mkdir(parents=True, exist_ok=True)
     for file,content in files.items(): (data/file).write_bytes(content)
-    subprocess.run([str(root/f"track-{track}"/("solution.exe" if sys.platform=="win32" else "solution")),str(data),str(data/"out")], check=True)
+    subprocess.run([str(root/f"track-{track}"/("solution.exe" if sys.platform=="win32" else "solution")),str(data),str(data/"out")], check=True,env=env)
     output={"a":"summary.txt","c":"aggregates.txt","d":"distances.txt"}[track]
     assert (data/"out"/output).read_bytes()==expected,name
     print("PASS",name,flush=True)
@@ -21,6 +22,30 @@ spec=importlib.util.spec_from_file_location("c_tests",official/"tests"/"test_c_j
 c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
 run("c","c-worked",{"records.csv":c.WORKED_RECORDS,"regions.csv":c.WORKED_REGIONS},c.WORKED_OUTPUT)
 run("c","c-rules",{"records.csv":c.RULES_RECORDS,"regions.csv":c.RULES_REGIONS},c.RULES_OUTPUT)
+rows=[b'\xef\xbb\xbfid,name,note,region_id,amount\r\n']
+names=['', 'Ann "Annie" Lee', 'Betts', 'Betts ', '\ufeffA']
+notes=['', 'one\ntwo,"three"\r\nfour', '\ufeff', '"tail"']
+for i in range(20000):
+    name=names[i%len(names)];note=notes[i%len(notes)]
+    quoted=lambda text:'"'+text.replace('"','""')+'"'
+    n=quoted(name) if name or i%2 else ''
+    note=quoted(note) if note or i%3 else ''
+    cents=(i%10007)-5000
+    money=('-' if cents<0 else '')+str(abs(cents)//100)+'.'+str(abs(cents)%100).zfill(2)
+    prefix='\ufeff' if i%17==0 else ''
+    ending='\r\n' if i%2 else '\n'
+    if i==19999:ending=''
+    rows.append((prefix+str(i+1)+','+n+','+note+','+str(7 if i%3 else 99)+','+money+ending).encode())
+stress=b''.join(rows)
+oracle=root/".validation"/"edge-data"/"c-concurrent-oracle"
+oracle.mkdir(parents=True,exist_ok=True)
+(oracle/"records.csv").write_bytes(stress)
+(oracle/"regions.csv").write_bytes(c.RULES_REGIONS)
+c.ref.main(str(oracle),str(oracle/"reference"))
+expected=(oracle/"reference"/"aggregates.txt").read_bytes()
+for workers in (1,2,6,12):
+    env=dict(os.environ,C_WORKERS=str(workers))
+    run("c",f"c-concurrent-{workers}",{"records.csv":stress,"regions.csv":c.RULES_REGIONS},expected,env)
 run("a","a-empty",{"requests.log":b""},b"")
 run("a","a-extreme",{"requests.log":b"2026-11-01T00:00:00.000000Z GET / 499 4294967295\n2026-11-01T00:00:00.000000Z GET / 599 0\n"},b"2026-11-01T00:00:00Z / 2 0 4294967295 4294967295 1 500000\n")
 for seed in range(20):
