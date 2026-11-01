@@ -1,4 +1,4 @@
-# Injector Blind: Speed Demon 2026
+# Injector Bind: Speed Demon 2026
 
 The team submission is the `speed-demon` branch of https://github.com/Hackathons-ULT/speed-demon. The current candidates implement Tracks A (Ingest), C (Join), and D (Traverse) in zero-dependency C++17. Track B is still the unchanged organiser reference and is not a scored solution yet.
 
@@ -50,6 +50,6 @@ These are the organiser's published full-output hashes. The local candidates mat
 
 Soorya Dev's earlier scored Python Track A is preserved byte for byte under `experiments/track-a-python/` and in Git history. Its actual Board results remain in `track-a/PERF.md`. C++ changes were written and tested with Codex assistance during the event. Read each track's README.md and PERF.md for its algorithm, correctness argument, measurements, dependencies, and proposed next experiments. Human understanding has not been asserted by the agent.
 
-All human registrations are confirmed by the entrant. The Board already watches this repository under the spelling "Injector Bind"; project metadata follows the entrant's confirmed "Injector Blind" spelling. No new team-form response is needed to change the tracked branch contents. Keep the Board App installed through freeze.
+All human registrations are confirmed by the entrant. The Board watches this repository under the confirmed team name "Injector Bind". No new team-form response is needed to change the tracked branch contents. Keep the Board App installed through freeze.
 
 Code freeze is November 2, 2026 at 15:00 UTC. The repository must be public under its MIT licence by 16:00 UTC. Repository visibility has not been changed. Current rules: https://speeddemon.dev.
