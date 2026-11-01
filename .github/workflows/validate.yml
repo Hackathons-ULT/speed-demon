@@ -1,0 +1,37 @@
+name: Validate entry
+on:
+  push:
+    branches: [speed-demon, codex/acd-cpp]
+  pull_request:
+    branches: [speed-demon]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  correctness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned official specifications and references
+        run: |
+          git clone https://github.com/hackathon-raptors/speed-demon-2026.git ../official
+          git -C ../official checkout 158894dcefde61f459c0adfae841900458dbeb7f
+      - name: Build C++17 solutions
+        run: |
+          for track in a c d; do
+            g++ -std=c++17 -O3 -DNDEBUG -Wall -Wextra -static track-$track/main.cpp -o track-$track/solution
+            python3 ../official/harness/dockerfile_check.py track-$track/Dockerfile ../official/harness/allowlist.json
+          done
+      - name: Verify fixtures, random graphs, and multiple generator seeds
+        run: |
+          python3 tools/edge_cases.py ../official
+          python3 tools/verify.py --official ../official --scale tiny --seeds 1 7 42
+          python3 tools/verify.py --official ../official --scale sample --seeds 1
+      - name: Verify offline builds and sandbox execution
+        run: |
+          docker pull gcc:15@sha256:eb5e64286ad47187b32bda75c6b6916166ecb41da56559b8b09e0001748d2cce
+          docker pull debian:13-slim@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad
+          for track in a c d; do
+            expected=$(python3 -c "import json; print(next(x['sha256'] for x in json.load(open('.validation/last-run.json')) if x['track']=='$track'))")
+            python3 check.py $track --data .validation/$track-sample-1 --expected "$expected"
+          done

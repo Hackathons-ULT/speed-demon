@@ -1,5 +1,5 @@
 # Read by the board and the scoring harness.
 track = "b"
-team = "Injector Bind"
+team = "Injector Blind"
 language = "Python"
 dependency_count = 0

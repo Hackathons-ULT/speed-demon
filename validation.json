@@ -1,0 +1,170 @@
+{
+  "status": "C++ candidate locally validated; private team integration pending CI and Board",
+  "official_commit": "158894dcefde61f459c0adfae841900458dbeb7f",
+  "compiler": "GCC 16.1.0 MinGW-w64, C++17 -O3 -DNDEBUG -static",
+  "platform": "Windows x86-64",
+  "timing_note": "Single local development runs, not controlled or official Board measurements. Reference times were measured earlier and are not a scoring claim.",
+  "full_runs": [
+    {
+      "track": "a",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3",
+      "bytes": 10113024,
+      "solution_seconds": 3.2571320999995805,
+      "earlier_reference_seconds": 45.27781799999866,
+      "source_sha256": "736fba98011445f50bb104ff122415f2413a03eb58508c83b6d5b17bacc4901d"
+    },
+    {
+      "track": "c",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "d8088b1cd42ba1338b1345b107b55db7b96ef1f5066f3ff64fd26a8912a0f536",
+      "bytes": 17054,
+      "solution_seconds": 7.890878400001384,
+      "earlier_reference_seconds": 21.180698699998175,
+      "source_sha256": "990bac12d6dd5b476fb4ddda7c237c8b9144c1416f3a8f7400fa957a6cd7e23a"
+    },
+    {
+      "track": "d",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "a23dbdf0a3e49cc8901310a9ee1dc6a9a569a85297b6da75c2a7002cb2ed277e",
+      "bytes": 9039,
+      "solution_seconds": 18.877821099998982,
+      "earlier_reference_seconds": 168.6782232000005,
+      "source_sha256": "fd7249b01a2868f5fcbd9e6a05e1d1aa0e3ea954de4e34f1e3ad81554e8a9e3c"
+    }
+  ],
+  "differential_checks": [
+    {
+      "track": "a",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3"
+    },
+    {
+      "track": "a",
+      "scale": "sample",
+      "seed": 1,
+      "sha256": "ca6311bbeb536fa55d85265bf6fd3d24cc9586f13de1ac73bd2a23ac3893aac3"
+    },
+    {
+      "track": "a",
+      "scale": "sample",
+      "seed": 7,
+      "sha256": "39bfccc5334c93cbe0c762f5e6c3300e91ca2e266567561da3176c038cee49f7"
+    },
+    {
+      "track": "a",
+      "scale": "tiny",
+      "seed": 1,
+      "sha256": "c24fa507c963eaeac9224fd8435019b4f4e8c002ece7e32f316681a3957eb92f"
+    },
+    {
+      "track": "a",
+      "scale": "tiny",
+      "seed": 42,
+      "sha256": "5f7611f0f34b3cdfee59ca627d66d19b53b9c8ff13127b2f2073ff13c9583429"
+    },
+    {
+      "track": "a",
+      "scale": "tiny",
+      "seed": 7,
+      "sha256": "4ba05ab1a7a257e847c25beded9bf3cc658fb1d41f398b84a8a983a7b91f026d"
+    },
+    {
+      "track": "c",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "d8088b1cd42ba1338b1345b107b55db7b96ef1f5066f3ff64fd26a8912a0f536"
+    },
+    {
+      "track": "c",
+      "scale": "sample",
+      "seed": 1,
+      "sha256": "9035fed36823232dd41ae2d1b9d6d21aa7c73f49d8e95647e953a89d5ebe9a66"
+    },
+    {
+      "track": "c",
+      "scale": "sample",
+      "seed": 7,
+      "sha256": "4a8b5533b3639d52e4bb82e622c0a03c071e3e4f7ea62c42fcb716d373602958"
+    },
+    {
+      "track": "c",
+      "scale": "tiny",
+      "seed": 1,
+      "sha256": "e4e43bc39920e9d446c3fcd700fdd35b3959e9495c6aaa738491df38a1aed733"
+    },
+    {
+      "track": "c",
+      "scale": "tiny",
+      "seed": 42,
+      "sha256": "7d151bcd945ddf65dcddaa4b956f75435d638a411bddb7cdb42f4fb7e2d8e816"
+    },
+    {
+      "track": "c",
+      "scale": "tiny",
+      "seed": 7,
+      "sha256": "d4e6d325f1caea173a719a0cf7b806b66ab8b6191d87ccb5a1a452209ee6355c"
+    },
+    {
+      "track": "d",
+      "scale": "full",
+      "seed": 1,
+      "sha256": "a23dbdf0a3e49cc8901310a9ee1dc6a9a569a85297b6da75c2a7002cb2ed277e"
+    },
+    {
+      "track": "d",
+      "scale": "sample",
+      "seed": 1,
+      "sha256": "a4c76ed030bc7e365db33191f6cf74708fba7f25eb48d64c8c4279f2e57046a0"
+    },
+    {
+      "track": "d",
+      "scale": "sample",
+      "seed": 7,
+      "sha256": "88bf36c94620505d1beafe7cd56a08dc2d261b71f9824d2f764d5ce6e5d7872e"
+    },
+    {
+      "track": "d",
+      "scale": "tiny",
+      "seed": 1,
+      "sha256": "ecaca77d3221fe3928109da36480cfdb39f288f2e57ecbc61d3d7706d5cb4bd5"
+    },
+    {
+      "track": "d",
+      "scale": "tiny",
+      "seed": 42,
+      "sha256": "fbfcc948817019836ba14858214b7615f37f29adc095ad4712373df0064c33b5"
+    },
+    {
+      "track": "d",
+      "scale": "tiny",
+      "seed": 7,
+      "sha256": "70595ddd5a567f2b63ed182123353053ab42dfb521865ec44e81f684be9ba836"
+    }
+  ],
+  "official_reference_tests": 43,
+  "graph_fuzz_queries": 12500,
+  "additional_fixtures": [
+    "C worked example",
+    "C BOM/Unicode/end-of-file rules",
+    "A empty input",
+    "A uint32 and status boundary"
+  ],
+  "docker_allowlist": "passed for all three Dockerfiles",
+  "docker_runtime": "not run; Docker unavailable",
+  "board_run_ids": [],
+  "submission_status": "Existing team submission watches speed-demon; these C++ changes are prepared on codex/acd-cpp",
+  "existing_board_run": {
+    "track": "a",
+    "run_id": "run-cd538794e60c",
+    "commit": "a8780c5e2cc2b5ebe0daf2e31adff63716efddd4",
+    "T_s": 1.843859,
+    "M_bytes": 801910784,
+    "K": 2.347976,
+    "points": 18.534678
+  }
+}

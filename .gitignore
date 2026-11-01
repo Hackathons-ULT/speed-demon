@@ -1,2 +1,7 @@
 .out/
 data/
+
+*.exe
+solution
+.validation/
+__pycache__/

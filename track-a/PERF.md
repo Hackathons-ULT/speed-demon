@@ -6,3 +6,16 @@ Every step from the reference to your final version, each with the live-board ru
 |---|---|---|---|---|---|
 | 0 | The reference, unchanged | | 32.05 | 228 | 0 |
 | 1 | Replaced the reference with a stdlib-only optimised parser: no `datetime` (hour = first 13 bytes of the timestamp), one `bytes.split()` per ~256 KB chunk, forked workers pulling line-aligned tasks from a pipe, whole-hour segments found with `bisect`, a C-level 5xx scan, compact `array('I')` latency buffers, and parallel rank selection (histogram or partial sort) with a fallback to the reference for anything unexpected. | run-d501b265e44a | 1.88 | 801 | 18.34 |
+
+
+## November 1: compact C++ candidate (Codex assisted)
+
+The approach and correctness argument are in README.md. The new solution uses no direct runtime dependencies. All new solution code was written during the event on November 1; the organiser's references and earlier teammate work predate this change and are preserved in Git history.
+
+Local development check: Windows x86-64, GCC 16.1.0 MinGW-w64, C++17 -O3 -DNDEBUG -static. Full seed-1 output matched both the unmodified official reference and published SHA-256 `495ca09682b9673ef836a506496177680bb4a3af54255174befddb1f83481cd3`. The final local solution run took 3.257132 s. This is one development run, not a controlled scoring measurement. Memory has not been measured. No official score is inferred from this time.
+
+Differential checks also pass on tiny seeds 1, 7, 42 and sample seeds 1, 7. Additional fixtures cover CSV quoting, BOMs within values, end-of-file, status/uint32 boundaries, empty input, and 12,500 independently computed graph-query answers. The three official reference test suites pass 43 tests. `validation.json` records the evidence.
+
+Board run ID for this C++ step: pending. Add the actual run ID, wall time, peak memory, K and points after the submission branch runs. No run ID has been fabricated. Human review of this explanation remains necessary; AI assistance does not establish human understanding by itself.
+
+The earlier scored Python implementation is preserved under `experiments/track-a-python/`; its existing performance log above is unchanged. The compact candidate avoids the per-process parsing/ranking machinery and stores only one 32-bit latency per request. Whether it improves the coefficient must be established on the same Board hardware.
